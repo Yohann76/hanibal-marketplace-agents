@@ -1,90 +1,94 @@
 # Marketplace OC Agents
 
-> Une interface marketplace de ressources agentiques — des agents IA prêts à l'emploi pour automatiser vos tâches du quotidien.
+> An agentic resource marketplace — ready-to-use AI agents to automate your daily tasks.
 
 ---
 
 ## Concept
 
-Là où une marketplace classique propose des ressources humaines, **OC Agents** propose des **ressources agentiques** : des agents propulsés par l'IA capables d'exécuter des tâches à votre place.
+Where a traditional marketplace offers human resources, **OC Agents** offers **agentic resources**: AI-powered agents capable of executing tasks on your behalf.
 
-Chaque agent est autonome, configurable, et facturé à la consommation selon les tokens IA utilisés.
+Each agent is autonomous, configurable, and billed on consumption based on the AI tokens used.
 
 ---
 
 ## Interface
 
-Les agents sont présentés sous forme de **cartes** disposées au centre de la page. Chaque carte expose :
+Agents are displayed as **cards** laid out at the center of the page. Each card shows:
 
-- Le **nom** et la **description** de l'agent
-- Son **type** (chatbot ou analyse)
-- Ses **entrées** et **sorties**
-- Un bouton d'accès rapide
+- The agent's **name** and **description**
+- Its **type** (chatbot or analysis)
+- Its **inputs** and **outputs**
+- A quick access button
 
-### Types d'agents
+### Agent types
 
-| Type | Icône | Description |
+| Type | Icon | Description |
 |---|---|---|
-| Chatbot | 🧑 Personnage | Interaction conversationnelle avec l'utilisateur |
-| Analyse | 🤖 Robot | Traitement automatique de données ou de documents |
+| Chatbot | 🧑 Character | Conversational interaction with the user |
+| Analysis | 🤖 Robot | Automatic processing of data or documents |
 
 ---
 
-## Agents disponibles
+## Available agents
 
-| Agent | Description | Entrée | Sortie |
+| Agent | Description | Input | Output |
 |---|---|---|---|
-| **Analyse SEO** | Audite une page web et génère un rapport SEO | URL de la page | Rapport structuré |
-| **Compte-rendu de réunion** | Transcrit et résume une réunion | Fichier audio / texte | Compte-rendu formaté |
-| **Résumé des mails** | Lit et synthétise les emails du jour | Connexion messagerie | Résumé quotidien |
+| **SEO Analysis** | Audits a web page and generates an SEO report | Page URL | Structured report |
+| **Meeting summary** | Transcribes and summarizes a meeting | Audio / text file | Formatted summary |
+| **Email digest** | Reads and synthesizes today's emails | Mailbox connection | Daily summary |
+| **Ontology** | Analyses a subject and generates a Mermaid visual diagram | Text | Mermaid diagram |
+| **Use case diagram** | Generates a UML use case diagram | System description | Mermaid diagram |
+| **Sequence diagram** | Generates a UML sequence diagram | Process description | Mermaid diagram |
 
 ---
 
-## Gestion des entrées
+## Input management
 
-Chaque agent définit le **type d'entrée** qu'il accepte :
+Each agent defines the **type of input** it accepts:
 
-- **Texte libre** — saisie directe dans l'interface
-- **Fichier(s)** — un clic sur l'icône de l'agent ouvre une **fenêtre modale** permettant de déposer les fichiers à traiter
-- **Service tiers** — certains agents (ex. : agent mail) permettent de connecter un compte externe (messagerie, agenda…) via un formulaire dédié dans les paramètres de l'agent
-
----
-
-## Comptes utilisateurs
-
-Chaque utilisateur peut :
-
-- Parcourir la marketplace et **activer les agents** de son choix
-- **Configurer ses propres agents** (paramètres, identifiants de services, prompts personnalisés)
-- Consulter son **tableau de bord de consommation** (tokens utilisés, coût estimé)
+- **Free text** — direct input in the interface
+- **File(s)** — clicking the agent icon opens a **modal window** to upload files for processing
+- **Third-party service** — some agents (e.g. email agent) allow connecting an external account (mailbox, calendar…) via a dedicated form in the agent settings
 
 ---
 
-## Structure d'un agent (code)
+## User accounts
 
-Chaque agent est représenté par un **dossier autonome** dans le projet :
+Each user can:
+
+- Browse the marketplace and **activate agents** of their choice
+- **Configure their own agents** (settings, service credentials, custom prompts)
+- View their **consumption dashboard** (tokens used, estimated cost)
+
+---
+
+## Agent structure (code)
+
+Each agent is represented by a **self-contained folder** in the project:
 
 ```
 agents/
 └── email-summary/
-    ├── config.json          # Type d'entrée, métadonnées, type d'agent
-    ├── system_prompt.txt    # Prompt système envoyé au modèle IA
-    ├── schema.json          # Structure des entrées/sorties attendues
-    └── integrations/
-        └── gmail.json       # Paramètres de connexion au service (messagerie, etc.)
+    ├── config.json          # Input type, metadata, agent type
+    ├── system_prompt.txt    # System prompt sent to the AI model
+    ├── docs.md              # Agent documentation
+    └── connaissance/        # Knowledge base files (injected into context)
+        └── reference.md
 ```
 
-### Exemple `config.json`
+### Example `config.json`
 
 ```json
 {
   "id": "email-summary",
-  "name": "Résumé des mails",
+  "name": "Email digest",
   "type": "analyse",
+  "provider": "mistral",
   "input": {
-    "type": "service",
-    "service": "gmail",
-    "fields": ["email", "password"]
+    "type": "gmail",
+    "label": "Gmail connection",
+    "placeholder": ""
   },
   "output": {
     "type": "text"
@@ -94,54 +98,54 @@ agents/
 
 ---
 
-## Facturation
+## Billing
 
-L'exécution de chaque agent consomme des **tokens IA**. Ces tokens sont :
+Each agent execution consumes **AI tokens**. These tokens are:
 
-1. **Comptabilisés** à chaque appel au modèle
-2. **Agrégés** par utilisateur et par agent
-3. **Convertis en coût** selon la grille tarifaire du modèle utilisé
+1. **Tracked** on every model call
+2. **Aggregated** per user and per agent
+3. **Converted to cost** based on the model's pricing grid
 
-Le coût final est affiché dans le tableau de bord et peut servir de base à une facturation client.
-
----
-
-## Stack technique (prévisionnel)
-
-- **Frontend** — Interface web (cartes agents, modales, dashboard)
-- **Backend** — API de gestion des agents, utilisateurs et consommation
-- **IA** — Appels aux modèles via API (Claude, OpenAI, etc.)
-- **Stockage** — Configuration des agents et historique de consommation
+The final cost is displayed in the dashboard and can serve as the basis for client billing.
 
 ---
 
-## Lancer le projet
+## Tech stack
+
+- **Frontend** — Next.js (agent cards, modals, dashboard)
+- **Backend** — Go + Fiber (agent API, token tracking)
+- **Database** — PostgreSQL
+- **AI** — API calls to models (Mistral, Claude, etc.)
+- **Infrastructure** — Docker & docker-compose
+
+---
+
+## Running the project
 
 ```bash
-# Installation des dépendances
-npm install
+cp .env.example .env
+# Fill in your API keys in .env
 
-# Démarrage en développement
-npm run dev
+make dev-build
+make dev-run
 ```
 
 ---
 
-## Licence
+## Technologies
 
-Projet privé — tous droits réservés.
+- Docker & docker-compose (with `make dev-run`, `make dev-kill`, `make dev-logs`, `make dev-build`)
+- Next.js
+- PostgreSQL
+- Backend: Go
 
+- Interface: http://162.19.241.44:42000
+- API: http://162.19.241.44:42001
 
-# Technologies
+Server IP: 162.19.241.44
 
-- Docker & docker-compose (with make dev-run, make dev-kill, make dev-logs, make dev-build)
-- NextJS 
-- PostregreSQL
-- Backend : Go 
+---
 
-- Interface : http://162.19.241.44:42000
-- API : http://162.19.241.44:42001
+## License
 
-
-IP Serveur: 162.19.241.44
-
+Private project — all rights reserved.
