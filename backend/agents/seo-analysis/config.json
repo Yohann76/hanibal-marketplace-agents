@@ -1,0 +1,15 @@
+{
+  "id": "seo-analysis",
+  "name": "Analyse SEO",
+  "description": "Analyse la page web fournie et génère un rapport SEO complet avec recommandations.",
+  "type": "analyse",
+  "provider": "mistral",
+  "input": {
+    "type": "url",
+    "label": "URL de la page à analyser",
+    "placeholder": "https://example.com"
+  },
+  "output": {
+    "type": "text"
+  }
+}

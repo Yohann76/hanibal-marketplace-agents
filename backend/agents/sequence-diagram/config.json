@@ -1,0 +1,15 @@
+{
+  "id": "sequence-diagram",
+  "name": "Diagramme de séquence",
+  "description": "Génère un diagramme de séquence UML illustrant les interactions entre acteurs et systèmes dans le temps.",
+  "type": "analyse",
+  "provider": "mistral",
+  "input": {
+    "type": "text",
+    "label": "Description du processus ou des interactions",
+    "placeholder": "Ex: Le processus de connexion d'un utilisateur avec authentification à deux facteurs..."
+  },
+  "output": {
+    "type": "mermaid"
+  }
+}
