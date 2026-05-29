@@ -135,6 +135,11 @@ func resolveInput(inputType, input, session string) (string, error) {
 			return "", fmt.Errorf("l'URL est requise")
 		}
 		return fetchURLContent(input)
+	case "prospection":
+		if input == "" {
+			return "", fmt.Errorf("décrivez votre cible de prospection")
+		}
+		return searchEntreprises(input)
 	default:
 		if input == "" {
 			return "", fmt.Errorf("le champ input est requis")

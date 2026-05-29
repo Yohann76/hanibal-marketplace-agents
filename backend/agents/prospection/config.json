@@ -1,0 +1,15 @@
+{
+  "id": "prospection",
+  "name": "Prospection",
+  "description": "Recherche des entreprises françaises (SIRENE / data.gouv.fr), identifie les contacts et génère une fiche de prospection structurée.",
+  "type": "analyse",
+  "provider": "mistral",
+  "input": {
+    "type": "prospection",
+    "label": "Décrivez votre cible",
+    "placeholder": "Ex: agences web à Paris, startups fintech en Île-de-France, PME agroalimentaire en Bretagne..."
+  },
+  "output": {
+    "type": "text"
+  }
+}

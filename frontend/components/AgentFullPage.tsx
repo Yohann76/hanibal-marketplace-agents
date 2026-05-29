@@ -156,7 +156,7 @@ function UseTab({ config }: { config: AgentConfig }) {
 
   return (
     <div className="space-y-5">
-      {config.input.type === 'text' && (
+      {(config.input.type === 'text' || config.input.type === 'prospection') && (
         <div>
           <label className="text-gray-400 text-sm mb-2 block">{config.input.label}</label>
           <textarea

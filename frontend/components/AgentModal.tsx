@@ -86,8 +86,8 @@ export default function AgentModal({
 
         <div className="p-6 space-y-4 overflow-y-auto">
 
-          {/* Input type: text */}
-          {agent.input.type === 'text' && (
+          {/* Input type: text or prospection */}
+          {(agent.input.type === 'text' || agent.input.type === 'prospection') && (
             <div>
               <label className="text-gray-400 text-sm mb-2 block">{agent.input.label}</label>
               <textarea
