@@ -1,10 +1,10 @@
 {
   "id": "prospection",
   "name": "Prospection",
-  "description": "Recherche des entreprises françaises (SIRENE / data.gouv.fr), identifie les contacts et génère une fiche de prospection structurée.",
+  "description": "Recherche des entreprises françaises (SIRENE), trouve les contacts (email, téléphone, site) et génère des fiches de prospection concises.",
   "type": "analyse",
   "provider": "mistral",
-  "tools": ["web_search", "search_french_companies"],
+  "tools": ["search_french_companies", "find_company_contacts", "web_search"],
   "input": {
     "type": "text",
     "label": "Décrivez votre cible",

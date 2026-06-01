@@ -330,6 +330,12 @@ const TOOL_ICONS: Record<string, React.ReactNode> = {
       <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M3 9h6"/><path d="M3 15h6"/><path d="M15 3v18"/><path d="M15 9h6"/><path d="M15 15h6"/>
     </svg>
   ),
+  contact: (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+      <circle cx="12" cy="7" r="4"/>
+    </svg>
+  ),
 }
 
 function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInfo[] }) {
