@@ -7,14 +7,25 @@ from typing import Optional, AsyncGenerator
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from sqlalchemy import text
-from app.config import DATABASE_URL, MISTRAL_API_KEY, ANTHROPIC_API_KEY
+from app.config import (
+    DATABASE_URL, MISTRAL_API_KEY, ANTHROPIC_API_KEY,
+    MISTRAL_MODEL, CLAUDE_MODEL,
+    MISTRAL_COST_INPUT_PER_M, MISTRAL_COST_OUTPUT_PER_M,
+    CLAUDE_COST_INPUT_PER_M, CLAUDE_COST_OUTPUT_PER_M,
+)
 from app.database import engine
 from app.services.tools import get_tools
 
 AGENTS_DIR = Path(__file__).parent.parent.parent / "agents"
 
-MISTRAL_MODEL = "mistral-small-latest"
-CLAUDE_MODEL  = "claude-sonnet-4-6"
+_COST_TABLE = {
+    "mistral": (MISTRAL_COST_INPUT_PER_M, MISTRAL_COST_OUTPUT_PER_M),
+    "claude":  (CLAUDE_COST_INPUT_PER_M,  CLAUDE_COST_OUTPUT_PER_M),
+}
+
+def _calc_cost(provider: str, input_tokens: int, output_tokens: int) -> float:
+    rate_in, rate_out = _COST_TABLE.get(provider, (MISTRAL_COST_INPUT_PER_M, MISTRAL_COST_OUTPUT_PER_M))
+    return round((input_tokens * rate_in + output_tokens * rate_out) / 1_000_000, 6)
 
 
 # ── Callbacks ────────────────────────────────────────────────────────────────
@@ -43,6 +54,9 @@ def get_llm(provider: str, callbacks: list):
         return ChatAnthropic(model=CLAUDE_MODEL, api_key=ANTHROPIC_API_KEY, callbacks=callbacks)
     from langchain_mistralai import ChatMistralAI
     return ChatMistralAI(model=MISTRAL_MODEL, api_key=MISTRAL_API_KEY, callbacks=callbacks)
+
+def get_model_name(provider: str) -> str:
+    return CLAUDE_MODEL if provider == "claude" else MISTRAL_MODEL
 
 
 # ── Agent config helpers ──────────────────────────────────────────────────────
@@ -180,7 +194,10 @@ async def _mistral_tool_loop(
             u = data.get("usage", {})
             usage.input_tokens  = u.get("prompt_tokens", 0)
             usage.output_tokens = u.get("completion_tokens", 0)
-            call_tokens = u.get("prompt_tokens", 0) + u.get("completion_tokens", 0)
+            call_input_tokens  = u.get("prompt_tokens", 0)
+            call_output_tokens = u.get("completion_tokens", 0)
+            call_tokens = call_input_tokens + call_output_tokens
+            call_cost_eur = _calc_cost("mistral", call_input_tokens, call_output_tokens)
 
             msg        = data["choices"][0]["message"]
             tool_calls = msg.get("tool_calls") or []
@@ -223,7 +240,11 @@ async def _mistral_tool_loop(
                     "tool_call_id": tc["id"],
                     "content": str(result),
                 })
-                yield {"type": "tool_end", "tool": name, "result": str(result), "call_tokens": call_tokens}
+                yield {"type": "tool_end", "tool": name, "result": str(result),
+                       "call_tokens": call_tokens,
+                       "call_input_tokens": call_input_tokens,
+                       "call_output_tokens": call_output_tokens,
+                       "call_cost_eur": call_cost_eur}
 
         # Si la boucle s'est terminée sans réponse finale (limite atteinte),
         # forcer un dernier appel sans tools pour obtenir la synthèse
@@ -316,6 +337,7 @@ async def stream_agent(
                         "tool": event["tool"],
                         "result": event.get("result", ""),
                         "tokens": event.get("call_tokens", 0),
+                        "cost_eur": event.get("call_cost_eur", 0),
                     })
                 yield event
 
@@ -331,7 +353,9 @@ async def stream_agent(
         await save_history(session_id, user_input, full_response,
                            completed_tool_calls or None)
 
-    yield {"type": "done", "input_tokens": usage.input_tokens, "output_tokens": usage.output_tokens}
+    cost_eur = _calc_cost(provider, usage.input_tokens, usage.output_tokens)
+    yield {"type": "done", "input_tokens": usage.input_tokens, "output_tokens": usage.output_tokens,
+           "cost_eur": cost_eur}
 
 
 # ── Non-streaming (backward compat) ──────────────────────────────────────────

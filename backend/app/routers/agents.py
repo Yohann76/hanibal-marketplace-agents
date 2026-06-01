@@ -12,7 +12,12 @@ logger = logging.getLogger(__name__)
 from app.services import agent_runner, seo_service, gmail_service, prospection_service
 from app.services.tools import get_tools_info
 from app.database import save_execution, upsert_conversation_session
-from app.config import BACKEND_PUBLIC_URL
+from app.config import (
+    BACKEND_PUBLIC_URL,
+    MISTRAL_MODEL, CLAUDE_MODEL,
+    MISTRAL_COST_INPUT_PER_M, MISTRAL_COST_OUTPUT_PER_M,
+    CLAUDE_COST_INPUT_PER_M, CLAUDE_COST_OUTPUT_PER_M,
+)
 
 router = APIRouter()
 AGENTS_DIR = Path("agents")
@@ -197,4 +202,10 @@ async def run_tool(tool_name: str, body: ToolRunRequest):
 
 @router.get("/config")
 async def get_config():
-    return {"gmail_auth_url": f"{BACKEND_PUBLIC_URL}/api/gmail/auth"}
+    return {
+        "gmail_auth_url": f"{BACKEND_PUBLIC_URL}/api/gmail/auth",
+        "models": {
+            "mistral": {"name": MISTRAL_MODEL, "cost_input_per_m": MISTRAL_COST_INPUT_PER_M, "cost_output_per_m": MISTRAL_COST_OUTPUT_PER_M},
+            "claude":  {"name": CLAUDE_MODEL,  "cost_input_per_m": CLAUDE_COST_INPUT_PER_M,  "cost_output_per_m": CLAUDE_COST_OUTPUT_PER_M},
+        },
+    }

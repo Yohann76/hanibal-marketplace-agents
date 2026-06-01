@@ -35,12 +35,18 @@ interface ToolCallRecord {
   status: 'running' | 'done'
   result?: string
   tokens?: number
+  cost_eur?: number
 }
 
 interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
   tool_calls?: ToolCallRecord[]
+}
+
+interface CostConfig {
+  mistral: { cost_input_per_m: number; cost_output_per_m: number }
+  claude:  { cost_input_per_m: number; cost_output_per_m: number }
 }
 
 interface ConversationSession {
@@ -56,6 +62,13 @@ interface ConversationSession {
 function fmtTokens(n: number): string {
   if (n >= 1000) return `${(n / 1000).toFixed(1)}k`
   return String(n)
+}
+
+function fmtCost(eur: number): string {
+  if (eur < 0.000001) return '< €0.000001'
+  if (eur < 0.001) return `€${eur.toFixed(6)}`
+  if (eur < 0.01)  return `€${eur.toFixed(4)}`
+  return `€${eur.toFixed(3)}`
 }
 
 type Tab = 'use' | 'config' | 'docs' | 'knowledge' | 'tools'
@@ -243,6 +256,11 @@ function ToolCallResult({ tc, toolsInfo }: { tc: ToolCallRecord; toolsInfo: Tool
                 {fmtTokens(tc.tokens)} tok
               </span>
             )}
+            {tc.cost_eur !== undefined && tc.cost_eur > 0 && (
+              <span className="font-mono text-emerald-700 bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px]">
+                {fmtCost(tc.cost_eur)}
+              </span>
+            )}
             {lineCount > 0 && (
               <span className="text-gray-600">{lineCount} ligne{lineCount > 1 ? 's' : ''}</span>
             )}
@@ -362,7 +380,14 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [activeTool, setActiveTool] = useState<string | null>(null)
+  const [costConfig, setCostConfig] = useState<CostConfig | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    fetch('/api/config').then(r => r.json()).then(d => {
+      if (d.models) setCostConfig(d.models)
+    }).catch(() => {})
+  }, [])
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, loading])
 
@@ -472,7 +497,7 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
             const last = msgs[msgs.length - 1]
             const tcs = (last.tool_calls ?? []).map(tc =>
               tc.tool === event.tool && tc.status === 'running'
-                ? { ...tc, status: 'done' as const, result: event.result, tokens: event.call_tokens }
+                ? { ...tc, status: 'done' as const, result: event.result, tokens: event.call_tokens, cost_eur: event.call_cost_eur }
                 : tc
             )
             msgs[msgs.length - 1] = { ...last, tool_calls: tcs }
@@ -543,12 +568,19 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
                 <span>{timeAgo(s.updated_at)}</span>
                 <span>·</span>
                 <span>{s.message_count} msg</span>
-                {(s.input_tokens + s.output_tokens) > 0 && (
-                  <>
-                    <span>·</span>
-                    <span className="font-mono">{fmtTokens(s.input_tokens + s.output_tokens)} tok</span>
-                  </>
-                )}
+                {(s.input_tokens + s.output_tokens) > 0 && (() => {
+                  const rates = costConfig?.[config.provider as keyof CostConfig] ?? costConfig?.mistral
+                  const cost = rates
+                    ? (s.input_tokens * rates.cost_input_per_m + s.output_tokens * rates.cost_output_per_m) / 1_000_000
+                    : null
+                  return (
+                    <>
+                      <span>·</span>
+                      <span className="font-mono">{fmtTokens(s.input_tokens + s.output_tokens)} tok</span>
+                      {cost !== null && <span className="text-gray-700">{fmtCost(cost)}</span>}
+                    </>
+                  )
+                })()}
               </p>
             </button>
           ))}
