@@ -90,21 +90,27 @@ def _sync_load_history(session_id: str) -> list:
     return messages
 
 
-def _sync_save_history(session_id: str, human_msg: str, ai_msg: str):
+def _sync_save_history(session_id: str, human_msg: str, ai_msg: str, tool_calls: list | None = None):
     with engine.connect() as conn:
-        for msg_type, content in [("human", human_msg), ("ai", ai_msg)]:
-            conn.execute(
-                text("INSERT INTO message_store (session_id, message) VALUES (:sid, :msg)"),
-                {"sid": session_id, "msg": json.dumps({"type": msg_type, "data": {"content": content}})},
-            )
+        conn.execute(
+            text("INSERT INTO message_store (session_id, message) VALUES (:sid, :msg)"),
+            {"sid": session_id, "msg": json.dumps({"type": "human", "data": {"content": human_msg}})},
+        )
+        ai_data: dict = {"content": ai_msg}
+        if tool_calls:
+            ai_data["tool_calls"] = tool_calls
+        conn.execute(
+            text("INSERT INTO message_store (session_id, message) VALUES (:sid, :msg)"),
+            {"sid": session_id, "msg": json.dumps({"type": "ai", "data": ai_data})},
+        )
         conn.commit()
 
 
 async def load_history(session_id: str):
     return await asyncio.get_event_loop().run_in_executor(None, _sync_load_history, session_id)
 
-async def save_history(session_id: str, human_msg: str, ai_msg: str):
-    await asyncio.get_event_loop().run_in_executor(None, _sync_save_history, session_id, human_msg, ai_msg)
+async def save_history(session_id: str, human_msg: str, ai_msg: str, tool_calls: list | None = None):
+    await asyncio.get_event_loop().run_in_executor(None, _sync_save_history, session_id, human_msg, ai_msg, tool_calls)
 
 
 # ── Direct Mistral tool loop (bypasses LangChain serialisation entirely) ─────
@@ -153,7 +159,7 @@ async def _mistral_tool_loop(
     full_response = ""
 
     async with httpx.AsyncClient(timeout=60) as client:
-        for _ in range(5):
+        for _ in range(15):
             resp = await client.post(
                 "https://api.mistral.ai/v1/chat/completions",
                 headers={
@@ -174,6 +180,7 @@ async def _mistral_tool_loop(
             u = data.get("usage", {})
             usage.input_tokens  = u.get("prompt_tokens", 0)
             usage.output_tokens = u.get("completion_tokens", 0)
+            call_tokens = u.get("prompt_tokens", 0) + u.get("completion_tokens", 0)
 
             msg        = data["choices"][0]["message"]
             tool_calls = msg.get("tool_calls") or []
@@ -216,7 +223,25 @@ async def _mistral_tool_loop(
                     "tool_call_id": tc["id"],
                     "content": str(result),
                 })
-                yield {"type": "tool_end", "tool": name, "result": str(result)}
+                yield {"type": "tool_end", "tool": name, "result": str(result), "call_tokens": call_tokens}
+
+        # Si la boucle s'est terminée sans réponse finale (limite atteinte),
+        # forcer un dernier appel sans tools pour obtenir la synthèse
+        if not full_response:
+            resp = await client.post(
+                "https://api.mistral.ai/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {MISTRAL_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={"model": MISTRAL_MODEL, "messages": history},
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                u = data.get("usage", {})
+                usage.input_tokens  = u.get("prompt_tokens", 0)
+                usage.output_tokens = u.get("completion_tokens", 0)
+                full_response = data["choices"][0]["message"].get("content") or ""
 
     for i in range(0, len(full_response), 6):
         yield {"type": "token", "content": full_response[i:i+6]}
@@ -240,6 +265,7 @@ async def stream_agent(
     usage   = UsageCallback()
     history = await load_history(session_id) if session_id else []
     full_response = ""
+    completed_tool_calls: list = []
 
     messages = [SystemMessage(content=full_prompt)] + history + [HumanMessage(content=user_input)]
 
@@ -273,7 +299,9 @@ async def stream_agent(
                     except Exception as e:
                         result = f"Tool error: {e}"
                     current.append(ToolMessage(content=str(result), tool_call_id=tc["id"]))
-                    yield {"type": "tool_end", "tool": tc["name"], "result": str(result)}
+                    event = {"type": "tool_end", "tool": tc["name"], "result": str(result)}
+                    completed_tool_calls.append({"tool": tc["name"], "result": str(result)})
+                    yield event
 
             for i in range(0, len(full_response), 6):
                 yield {"type": "token", "content": full_response[i:i+6]}
@@ -283,6 +311,12 @@ async def stream_agent(
             async for event in _mistral_tool_loop(messages, tools, tools_dict, usage):
                 if event["type"] == "token":
                     full_response += event["content"]
+                elif event["type"] == "tool_end":
+                    completed_tool_calls.append({
+                        "tool": event["tool"],
+                        "result": event.get("result", ""),
+                        "tokens": event.get("call_tokens", 0),
+                    })
                 yield event
 
     else:
@@ -294,7 +328,8 @@ async def stream_agent(
                 yield {"type": "token", "content": chunk.content}
 
     if session_id and full_response:
-        await save_history(session_id, user_input, full_response)
+        await save_history(session_id, user_input, full_response,
+                           completed_tool_calls or None)
 
     yield {"type": "done", "input_tokens": usage.input_tokens, "output_tokens": usage.output_tokens}
 
@@ -323,8 +358,23 @@ async def run_agent(agent_id: str, user_input: str, session_id: Optional[str] = 
 # ── History reader ────────────────────────────────────────────────────────────
 
 def get_conversation_history(session_id: str) -> list[dict]:
-    messages = _sync_load_history(session_id)
-    return [
-        {"role": "user" if isinstance(m, HumanMessage) else "assistant", "content": m.content}
-        for m in messages
-    ]
+    with engine.connect() as conn:
+        rows = conn.execute(
+            text("SELECT message FROM message_store WHERE session_id = :sid ORDER BY id"),
+            {"sid": session_id},
+        ).fetchall()
+    result = []
+    for row in rows:
+        data = row[0]
+        if isinstance(data, str):
+            data = json.loads(data)
+        msg_type = data.get("type", "")
+        msg_data = data.get("data", {})
+        if msg_type == "human":
+            result.append({"role": "user", "content": msg_data.get("content", "")})
+        elif msg_type == "ai":
+            msg: dict = {"role": "assistant", "content": msg_data.get("content", "")}
+            if msg_data.get("tool_calls"):
+                msg["tool_calls"] = msg_data["tool_calls"]
+            result.append(msg)
+    return result

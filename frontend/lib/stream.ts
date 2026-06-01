@@ -1,7 +1,7 @@
 export type StreamEvent =
   | { type: 'token'; content: string }
   | { type: 'tool_start'; tool: string; input: string }
-  | { type: 'tool_end'; tool: string; result?: string }
+  | { type: 'tool_end'; tool: string; result?: string; call_tokens?: number }
   | { type: 'done'; input_tokens: number; output_tokens: number }
   | { type: 'error'; message: string }
 

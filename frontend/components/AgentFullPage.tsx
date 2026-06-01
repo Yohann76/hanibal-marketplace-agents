@@ -34,6 +34,7 @@ interface ToolCallRecord {
   tool: string
   status: 'running' | 'done'
   result?: string
+  tokens?: number
 }
 
 interface ChatMessage {
@@ -47,7 +48,14 @@ interface ConversationSession {
   agent_id: string
   title: string
   message_count: number
+  input_tokens: number
+  output_tokens: number
   updated_at: string
+}
+
+function fmtTokens(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`
+  return String(n)
 }
 
 type Tab = 'use' | 'config' | 'docs' | 'knowledge' | 'tools'
@@ -229,7 +237,12 @@ function ToolCallResult({ tc, toolsInfo }: { tc: ToolCallRecord; toolsInfo: Tool
         <span className={`font-medium ${isDone ? 'text-violet-300' : 'text-gray-400'}`}>{label}</span>
 
         {isDone ? (
-          <span className="ml-auto text-violet-600 flex items-center gap-1.5">
+          <span className="ml-auto flex items-center gap-2 text-violet-600">
+            {tc.tokens && tc.tokens > 0 && (
+              <span className="font-mono text-gray-500 bg-gray-800/60 px-1.5 py-0.5 rounded text-[10px]">
+                {fmtTokens(tc.tokens)} tok
+              </span>
+            )}
             {lineCount > 0 && (
               <span className="text-gray-600">{lineCount} ligne{lineCount > 1 ? 's' : ''}</span>
             )}
@@ -372,7 +385,17 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
       const res = await fetch(`/api/conversations/${sessionId}`)
       if (res.ok) {
         const data = await res.json()
-        setMessages(data.messages ?? [])
+        const msgs: ChatMessage[] = (data.messages ?? []).map((m: any) => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+          tool_calls: m.tool_calls?.map((tc: any) => ({
+            tool: tc.tool,
+            status: 'done' as const,
+            result: tc.result,
+            tokens: tc.tokens ?? 0,
+          })),
+        }))
+        setMessages(msgs)
       }
     } catch {}
     finally { setLoadingHistory(false) }
@@ -449,7 +472,7 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
             const last = msgs[msgs.length - 1]
             const tcs = (last.tool_calls ?? []).map(tc =>
               tc.tool === event.tool && tc.status === 'running'
-                ? { ...tc, status: 'done' as const, result: event.result }
+                ? { ...tc, status: 'done' as const, result: event.result, tokens: event.call_tokens }
                 : tc
             )
             msgs[msgs.length - 1] = { ...last, tool_calls: tcs }
@@ -516,8 +539,16 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
               <p className="text-sm text-gray-200 truncate leading-snug">
                 {s.title || 'Conversation'}
               </p>
-              <p className="text-xs text-gray-600 mt-0.5">
-                {timeAgo(s.updated_at)} · {s.message_count} msg
+              <p className="text-xs text-gray-600 mt-0.5 flex items-center gap-1.5">
+                <span>{timeAgo(s.updated_at)}</span>
+                <span>·</span>
+                <span>{s.message_count} msg</span>
+                {(s.input_tokens + s.output_tokens) > 0 && (
+                  <>
+                    <span>·</span>
+                    <span className="font-mono">{fmtTokens(s.input_tokens + s.output_tokens)} tok</span>
+                  </>
+                )}
               </p>
             </button>
           ))}

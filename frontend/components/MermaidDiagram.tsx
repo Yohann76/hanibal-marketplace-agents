@@ -9,16 +9,17 @@ async function getMermaid() {
   if (!mermaidInitialized) {
     mermaid.initialize({
       startOnLoad: false,
-      theme: 'dark',
+      theme: 'default',
       themeVariables: {
-        darkMode: true,
-        background: '#0f172a',
-        primaryColor: '#1e40af',
-        primaryTextColor: '#e2e8f0',
+        background: '#ffffff',
+        primaryColor: '#dbeafe',
+        primaryTextColor: '#1e3a5f',
         primaryBorderColor: '#3b82f6',
         lineColor: '#64748b',
-        secondaryColor: '#1e293b',
-        tertiaryColor: '#0f172a',
+        secondaryColor: '#f1f5f9',
+        tertiaryColor: '#f8fafc',
+        fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+        fontSize: '14px',
       },
     })
     mermaidInitialized = true
@@ -69,14 +70,14 @@ export default function MermaidDiagram({ code }: { code: string }) {
 
   return (
     <>
-      <div className="relative group bg-gray-900 border border-gray-700 rounded-lg p-6 overflow-x-auto min-h-[120px] flex justify-center items-center">
+      <div className="relative group bg-white border border-gray-200 rounded-xl p-6 overflow-x-auto min-h-[120px] flex justify-center items-center shadow-sm">
         <DiagramView
           code={code}
           containerClass="flex justify-center items-center w-full"
         />
         <button
           onClick={() => setFullscreen(true)}
-          className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5 text-xs text-gray-400 hover:text-white bg-gray-800 hover:bg-blue-600 border border-gray-700 hover:border-blue-500 px-2.5 py-1.5 rounded-lg"
+          className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-900 bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-300 px-2.5 py-1.5 rounded-lg shadow-sm"
           title="Plein écran (Échap pour fermer)"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -91,14 +92,14 @@ export default function MermaidDiagram({ code }: { code: string }) {
 
       {fullscreen && (
         <div
-          className="fixed inset-0 bg-black/95 z-50 flex flex-col"
+          className="fixed inset-0 bg-black/60 z-50 flex flex-col"
           onClick={(e) => e.target === e.currentTarget && setFullscreen(false)}
         >
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
-            <span className="text-gray-400 text-sm">Diagramme — cliquez en dehors ou appuyez sur Échap pour fermer</span>
+          <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200">
+            <span className="text-gray-500 text-sm">Cliquez en dehors ou appuyez sur Échap pour fermer</span>
             <button
               onClick={() => setFullscreen(false)}
-              className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 border border-gray-700 px-3 py-1.5 rounded-lg transition-all"
+              className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 border border-gray-200 px-3 py-1.5 rounded-lg transition-all"
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="4 14 10 14 10 20"/>
@@ -109,7 +110,7 @@ export default function MermaidDiagram({ code }: { code: string }) {
               Fermer
             </button>
           </div>
-          <div className="flex-1 flex justify-center items-center overflow-auto p-8">
+          <div className="flex-1 flex justify-center items-center overflow-auto p-8 bg-white">
             <DiagramView
               code={code}
               containerClass="flex justify-center items-center w-full h-full [&_svg]:max-w-full [&_svg]:max-h-full [&_svg]:w-auto [&_svg]:h-auto"
