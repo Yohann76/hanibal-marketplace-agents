@@ -146,6 +146,10 @@ Server IP: 162.19.241.44
 
 ---
 
+## Agent Description 
+
+LLM + Tools + Memory
+
 ## License
 
 Private project — all rights reserved.

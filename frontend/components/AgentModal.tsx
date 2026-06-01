@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+import { generateUUID } from '../lib/uuid'
+import { readStream } from '../lib/stream'
 import { AgentConfig } from './AgentCard'
 import MarkdownResult from './MarkdownResult'
 
@@ -21,9 +23,11 @@ export default function AgentModal({
   const [urlInput, setUrlInput] = useState('')
   const [gmailSession, setGmailSession] = useState<string | null>(null)
 
-  const [result, setResult] = useState<RunResult | null>(null)
+  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [activeTool, setActiveTool] = useState<string | null>(null)
+  const sessionId = useRef(generateUUID())
 
   const handleGmailConnect = async () => {
     const res = await fetch('/api/config')
@@ -46,28 +50,58 @@ export default function AgentModal({
   }
 
   const buildBody = () => {
-    if (agent.input.type === 'gmail') return { session: gmailSession }
-    if (agent.input.type === 'url') return { input: urlInput }
-    return { input: textInput }
+    const base = { session_id: sessionId.current }
+    if (agent.input.type === 'gmail') return { ...base, session: gmailSession }
+    if (agent.input.type === 'url') return { ...base, input: urlInput }
+    return { ...base, input: textInput }
+  }
+
+  const getDisplayInput = () => {
+    if (agent.input.type === 'url') return urlInput
+    if (agent.input.type === 'gmail') return '(Gmail connection)'
+    return textInput
   }
 
   const handleRun = async () => {
+    if (!isReady()) return
+    const userMsg = getDisplayInput()
+    setMessages(prev => [...prev, { role: 'user', content: userMsg }, { role: 'assistant', content: '' }])
+    if (agent.input.type === 'text' || agent.input.type === 'prospection') setTextInput('')
     setLoading(true)
     setError(null)
-    setResult(null)
+    setActiveTool(null)
+
     try {
-      const res = await fetch(`/api/agents/${agent.id}/run`, {
+      const res = await fetch(`/api/agents/${agent.id}/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(buildBody()),
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Erreur inconnue')
-      setResult(data)
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.detail || data.error || 'Erreur inconnue')
+      }
+      for await (const event of readStream(res)) {
+        if (event.type === 'token') {
+          setMessages(prev => {
+            const msgs = [...prev]
+            msgs[msgs.length - 1] = { role: 'assistant', content: msgs[msgs.length - 1].content + event.content }
+            return msgs
+          })
+        } else if (event.type === 'tool_start') {
+          setActiveTool(event.tool)
+        } else if (event.type === 'tool_end') {
+          setActiveTool(null)
+        } else if (event.type === 'error') {
+          throw new Error(event.message)
+        }
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erreur')
+      setMessages(prev => prev.slice(0, -1))
     } finally {
       setLoading(false)
+      setActiveTool(null)
     }
   }
 
@@ -161,14 +195,21 @@ export default function AgentModal({
             </div>
           )}
 
-          {result && (
-            <div className="space-y-3">
-              <MarkdownResult content={result.result} />
-              <div className="flex gap-4 text-xs text-gray-600">
-                <span>Entrée : {result.input_tokens} tokens</span>
-                <span>Sortie : {result.output_tokens} tokens</span>
-                <span>Total : {result.input_tokens + result.output_tokens} tokens</span>
-              </div>
+          {messages.length > 0 && (
+            <div className="space-y-4">
+              {messages.map((msg, i) => (
+                <div key={i}>
+                  {msg.role === 'user' ? (
+                    <div className="flex justify-end">
+                      <div className="bg-blue-900 border border-blue-800 text-blue-100 text-sm px-4 py-2 rounded-xl max-w-[85%]">
+                        {msg.content}
+                      </div>
+                    </div>
+                  ) : (
+                    <MarkdownResult content={msg.content} />
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </div>

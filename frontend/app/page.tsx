@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { AgentConfig } from '../components/AgentCard'
 import AgentGrid from '../components/AgentGrid'
 
@@ -23,6 +24,17 @@ export default async function Home() {
           <h1 className="text-xl font-bold tracking-tight">OC Agents</h1>
           <p className="text-gray-500 text-xs mt-0.5">Marketplace de ressources agentiques</p>
         </div>
+        <nav className="ml-auto flex items-center gap-2">
+          <Link
+            href="/conversations"
+            className="flex items-center gap-2 text-xs text-gray-400 hover:text-white bg-gray-900 hover:bg-gray-800 border border-gray-800 px-3 py-2 rounded-lg transition-all"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            Historique
+          </Link>
+        </nav>
       </header>
 
       {agents.length === 0 ? (

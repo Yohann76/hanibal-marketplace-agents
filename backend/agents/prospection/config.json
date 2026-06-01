@@ -4,6 +4,7 @@
   "description": "Recherche des entreprises françaises (SIRENE / data.gouv.fr), identifie les contacts et génère une fiche de prospection structurée.",
   "type": "analyse",
   "provider": "mistral",
+  "tools": ["web_search", "search_french_companies"],
   "input": {
     "type": "prospection",
     "label": "Décrivez votre cible",
