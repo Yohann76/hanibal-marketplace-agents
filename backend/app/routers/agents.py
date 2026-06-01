@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import traceback
@@ -9,6 +10,7 @@ from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 from app.services import agent_runner, seo_service, gmail_service, prospection_service
+from app.services.tools import get_tools_info
 from app.database import save_execution, upsert_conversation_session
 from app.config import BACKEND_PUBLIC_URL
 
@@ -64,6 +66,7 @@ def load_agent_detail(agent_id: str) -> dict:
         "system_prompt": system_prompt,
         "docs": docs,
         "knowledge": knowledge,
+        "tools_info": get_tools_info(config.get("tools", [])),
     }
 
 
@@ -170,6 +173,26 @@ async def stream_agent(agent_id: str, body: RunRequest):
 async def get_history(agent_id: str, session_id: str):
     messages = agent_runner.get_conversation_history(session_id)
     return {"session_id": session_id, "agent_id": agent_id, "messages": messages}
+
+
+class ToolRunRequest(BaseModel):
+    input: str
+
+
+@router.post("/tools/{tool_name}/run")
+async def run_tool(tool_name: str, body: ToolRunRequest):
+    from app.services.tools import TOOLS_REGISTRY
+    tool = TOOLS_REGISTRY.get(tool_name)
+    if not tool:
+        raise HTTPException(404, f"Tool '{tool_name}' not found")
+    try:
+        first_arg = next(iter(tool.args))
+        result = await asyncio.get_event_loop().run_in_executor(
+            None, tool.invoke, {first_arg: body.input}
+        )
+        return {"result": str(result)}
+    except Exception as e:
+        raise HTTPException(500, str(e))
 
 
 @router.get("/config")

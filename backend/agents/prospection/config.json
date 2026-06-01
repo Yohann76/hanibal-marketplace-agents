@@ -6,7 +6,7 @@
   "provider": "mistral",
   "tools": ["web_search", "search_french_companies"],
   "input": {
-    "type": "prospection",
+    "type": "text",
     "label": "Décrivez votre cible",
     "placeholder": "Ex: agences web à Paris, startups fintech en Île-de-France, PME agroalimentaire en Bretagne..."
   },

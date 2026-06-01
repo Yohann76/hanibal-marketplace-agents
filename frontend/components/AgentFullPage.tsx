@@ -12,11 +12,34 @@ export interface KnowledgeFile {
   content: string
 }
 
+export interface ToolInfo {
+  name: string
+  label: string
+  icon: string
+  description: string
+  input_label: string
+  input_example: string
+  source: string
+}
+
 export interface AgentDetail {
   config: AgentConfig
   system_prompt: string
   docs: string
   knowledge: KnowledgeFile[]
+  tools_info: ToolInfo[]
+}
+
+interface ToolCallRecord {
+  tool: string
+  status: 'running' | 'done'
+  result?: string
+}
+
+interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+  tool_calls?: ToolCallRecord[]
 }
 
 interface ConversationSession {
@@ -27,7 +50,7 @@ interface ConversationSession {
   updated_at: string
 }
 
-type Tab = 'use' | 'config' | 'docs' | 'knowledge'
+type Tab = 'use' | 'config' | 'docs' | 'knowledge' | 'tools'
 
 const TYPE_ICON: Record<string, string> = { chatbot: '🧑', analyse: '🤖' }
 
@@ -43,8 +66,9 @@ function timeAgo(dateStr: string) {
 
 export default function AgentFullPage({ detail }: { detail: AgentDetail }) {
   const [tab, setTab] = useState<Tab>('use')
-  const { config, system_prompt, docs, knowledge } = detail
+  const { config, system_prompt, docs, knowledge, tools_info = [] } = detail
   const hasKnowledge = knowledge && knowledge.length > 0
+  const hasTools = tools_info.length > 0
 
   return (
     <div className="h-screen bg-gray-950 text-white flex flex-col overflow-hidden">
@@ -89,6 +113,24 @@ export default function AgentFullPage({ detail }: { detail: AgentDetail }) {
             {t === 'use' ? 'Utiliser' : t === 'config' ? 'Configuration' : 'Documentation'}
           </button>
         ))}
+        {hasTools && (
+          <button
+            onClick={() => setTab('tools')}
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px flex items-center gap-2 ${
+              tab === 'tools'
+                ? 'border-violet-400 text-violet-300'
+                : 'border-transparent text-gray-500 hover:text-gray-300'
+            }`}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            </svg>
+            Outils
+            <span className="text-xs bg-violet-950 border border-violet-800 text-violet-400 px-1.5 py-0.5 rounded-full leading-none">
+              {tools_info.length}
+            </span>
+          </button>
+        )}
         {hasKnowledge && (
           <button
             onClick={() => setTab('knowledge')}
@@ -111,11 +153,12 @@ export default function AgentFullPage({ detail }: { detail: AgentDetail }) {
       </nav>
 
       {tab === 'use' ? (
-        <UseTab config={config} />
+        <UseTab config={config} toolsInfo={tools_info} />
       ) : (
         <main className="flex-1 px-8 py-8 max-w-4xl w-full mx-auto overflow-y-auto">
           {tab === 'config' && <ConfigTab config={config} systemPrompt={system_prompt} />}
           {tab === 'docs' && <DocsTab docs={docs} />}
+          {tab === 'tools' && <ToolsTab toolsInfo={tools_info} />}
           {tab === 'knowledge' && <KnowledgeTab knowledge={knowledge} />}
         </main>
       )}
@@ -148,10 +191,151 @@ function GmailButton({ onConnect, session }: { onConnect: (s: string) => void; s
   )
 }
 
-function UseTab({ config }: { config: AgentConfig }) {
+function ToolCallResult({ tc, toolsInfo }: { tc: ToolCallRecord; toolsInfo: ToolInfo[] }) {
+  const [open, setOpen] = useState(false)
+  const info = toolsInfo.find(t => t.name === tc.tool)
+  const label = info?.label ?? tc.tool.replace(/_/g, ' ')
+  const icon = info ? TOOL_ICONS[info.icon] : null
+  const isDone = tc.status === 'done'
+
+  const lineCount = tc.result ? tc.result.split('\n').length : 0
+
+  return (
+    <div className={`border rounded-lg overflow-hidden text-xs transition-colors ${
+      isDone ? 'border-violet-900/60' : 'border-gray-800'
+    }`}>
+      {/* Header */}
+      <button
+        onClick={() => isDone && setOpen(o => !o)}
+        disabled={!isDone}
+        className={`w-full flex items-center gap-2 px-3 py-2 text-left transition-colors ${
+          isDone ? 'hover:bg-violet-950/30 cursor-pointer bg-violet-950/20' : 'cursor-default bg-gray-900'
+        }`}
+      >
+        {isDone ? (
+          <svg
+            width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+            className={`text-violet-500 transition-transform shrink-0 ${open ? 'rotate-180' : ''}`}
+          >
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        ) : (
+          <span className="w-2.5 h-2.5 shrink-0 flex items-center justify-center">
+            <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-ping" />
+          </span>
+        )}
+
+        <span className="text-violet-400 shrink-0">{icon}</span>
+        <span className={`font-medium ${isDone ? 'text-violet-300' : 'text-gray-400'}`}>{label}</span>
+
+        {isDone ? (
+          <span className="ml-auto text-violet-600 flex items-center gap-1.5">
+            {lineCount > 0 && (
+              <span className="text-gray-600">{lineCount} ligne{lineCount > 1 ? 's' : ''}</span>
+            )}
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            {open ? 'Réduire' : 'Afficher'}
+          </span>
+        ) : (
+          <span className="ml-auto text-violet-500 animate-pulse">en cours…</span>
+        )}
+      </button>
+
+      {/* Résultat */}
+      {open && tc.result && (
+        <div className="border-t border-violet-900/40 bg-gray-950">
+          <pre className="text-gray-400 whitespace-pre-wrap leading-relaxed overflow-y-auto max-h-64 font-mono p-3 text-[11px]">
+            {tc.result}
+          </pre>
+          <div className="flex justify-end px-3 pb-2">
+            <button
+              onClick={() => setOpen(false)}
+              className="text-gray-600 hover:text-gray-400 text-xs"
+            >
+              Réduire ↑
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function RobotIcon({ className }: { className?: string }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+      <rect x="3" y="8" width="18" height="12" rx="2"/>
+      <path d="M12 8V4"/>
+      <circle cx="12" cy="3" r="1"/>
+      <rect x="7" y="12" width="3" height="2" rx="0.5" fill="currentColor" stroke="none"/>
+      <rect x="14" y="12" width="3" height="2" rx="0.5" fill="currentColor" stroke="none"/>
+      <path d="M9 17h6"/>
+      <path d="M3 13h1M20 13h1"/>
+    </svg>
+  )
+}
+
+function ToolCallIndicator({ toolName, toolsInfo }: { toolName: string; toolsInfo: ToolInfo[] }) {
+  const info = toolsInfo.find(t => t.name === toolName)
+  const label = info?.label ?? toolName.replace(/_/g, ' ')
+  const icon = info ? TOOL_ICONS[info.icon] : null
+  const source = info?.source ?? null
+
+  return (
+    <div>
+      <p className="text-gray-600 text-xs mb-1.5 uppercase tracking-wide">Agent</p>
+      <div className="flex items-center gap-3 bg-gray-900 border border-violet-900/50 rounded-xl px-4 py-3 w-fit max-w-sm">
+        {/* Robot avatar pulsant */}
+        <div className="w-9 h-9 bg-violet-950 border border-violet-800/60 rounded-lg flex items-center justify-center shrink-0 animate-pulse">
+          <RobotIcon className="text-violet-400" />
+        </div>
+
+        {/* Texte */}
+        <div className="min-w-0">
+          <p className="text-xs text-gray-500 leading-none mb-1">Utilisation d'un outil</p>
+          <div className="flex items-center gap-1.5">
+            {icon && <span className="text-violet-400 shrink-0">{icon}</span>}
+            <span className="text-sm text-violet-200 font-medium truncate">{label}</span>
+          </div>
+          {source && <p className="text-xs text-gray-600 mt-0.5">{source}</p>}
+        </div>
+
+        {/* Dots animés */}
+        <div className="flex gap-1 ml-1 shrink-0">
+          <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+          <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+          <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const TOOL_ICONS: Record<string, React.ReactNode> = {
+  search: (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+  ),
+  globe: (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+    </svg>
+  ),
+  building: (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M3 9h6"/><path d="M3 15h6"/><path d="M15 3v18"/><path d="M15 9h6"/><path d="M15 15h6"/>
+    </svg>
+  ),
+}
+
+function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInfo[] }) {
   const [activeSessionId, setActiveSessionId] = useState<string>(() => generateUUID())
   const [sessions, setSessions] = useState<ConversationSession[]>([])
-  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([])
+  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [loadingHistory, setLoadingHistory] = useState(false)
   const [textInput, setTextInput] = useState('')
   const [urlInput, setUrlInput] = useState('')
@@ -238,13 +422,33 @@ function UseTab({ config }: { config: AgentConfig }) {
         if (event.type === 'token') {
           setMessages(prev => {
             const msgs = [...prev]
-            msgs[msgs.length - 1] = { role: 'assistant', content: msgs[msgs.length - 1].content + event.content }
+            msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], content: msgs[msgs.length - 1].content + event.content }
             return msgs
           })
         } else if (event.type === 'tool_start') {
           setActiveTool(event.tool)
+          setMessages(prev => {
+            const msgs = [...prev]
+            const last = msgs[msgs.length - 1]
+            msgs[msgs.length - 1] = {
+              ...last,
+              tool_calls: [...(last.tool_calls ?? []), { tool: event.tool, status: 'running' }],
+            }
+            return msgs
+          })
         } else if (event.type === 'tool_end') {
           setActiveTool(null)
+          setMessages(prev => {
+            const msgs = [...prev]
+            const last = msgs[msgs.length - 1]
+            const tcs = (last.tool_calls ?? []).map(tc =>
+              tc.tool === event.tool && tc.status === 'running'
+                ? { ...tc, status: 'done' as const, result: event.result }
+                : tc
+            )
+            msgs[msgs.length - 1] = { ...last, tool_calls: tcs }
+            return msgs
+          })
         } else if (event.type === 'error') {
           throw new Error(event.message)
         }
@@ -312,6 +516,20 @@ function UseTab({ config }: { config: AgentConfig }) {
             </button>
           ))}
         </div>
+
+        {toolsInfo.length > 0 && (
+          <div className="border-t border-gray-800 p-3 shrink-0">
+            <p className="text-xs text-gray-600 uppercase tracking-widest mb-2 px-1">Outils actifs</p>
+            <div className="space-y-1">
+              {toolsInfo.map(t => (
+                <div key={t.name} className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-violet-950/30 border border-violet-900/40">
+                  <span className="text-violet-400 shrink-0">{TOOL_ICONS[t.icon]}</span>
+                  <span className="text-xs text-violet-300 truncate">{t.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </aside>
 
       {/* ── Chat area ── */}
@@ -340,7 +558,14 @@ function UseTab({ config }: { config: AgentConfig }) {
                 ) : (
                   <div>
                     <p className="text-gray-600 text-xs mb-1.5 uppercase tracking-wide">Agent</p>
-                    <MarkdownResult content={msg.content} />
+                    {msg.tool_calls && msg.tool_calls.length > 0 && (
+                      <div className="space-y-1.5 mb-3">
+                        {msg.tool_calls.map((tc, j) => (
+                          <ToolCallResult key={j} tc={tc} toolsInfo={toolsInfo} />
+                        ))}
+                      </div>
+                    )}
+                    {msg.content && <MarkdownResult content={msg.content} />}
                   </div>
                 )}
               </div>
@@ -348,18 +573,18 @@ function UseTab({ config }: { config: AgentConfig }) {
           )}
 
           {loading && (
-            <div className="flex items-center gap-2 text-gray-500 text-sm">
+            <div className="mt-2">
               {activeTool ? (
-                <>
-                  <span className="animate-spin text-amber-400">⚙</span>
-                  <span className="text-amber-400 text-xs">Utilisation de <strong>{activeTool}</strong>…</span>
-                </>
+                <ToolCallIndicator toolName={activeTool} toolsInfo={toolsInfo} />
               ) : (
-                <>
-                  <span className="animate-pulse">●</span>
-                  <span className="animate-pulse delay-75">●</span>
-                  <span className="animate-pulse delay-150">●</span>
-                </>
+                <div>
+                  <p className="text-gray-600 text-xs mb-1.5 uppercase tracking-wide">Agent</p>
+                  <div className="flex items-center gap-1.5 px-4 py-3">
+                    <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </div>
               )}
             </div>
           )}
@@ -413,6 +638,139 @@ function UseTab({ config }: { config: AgentConfig }) {
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+function ToolCard({ tool }: { tool: ToolInfo }) {
+  const [input, setInput] = useState('')
+  const [result, setResult] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const runTool = async () => {
+    if (!input.trim()) return
+    setLoading(true)
+    setResult(null)
+    setError(null)
+    try {
+      const res = await fetch(`/api/tools/${tool.name}/run`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input: input.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.detail || 'Erreur inconnue')
+      setResult(data.result)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erreur')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="border border-gray-800 rounded-xl overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center gap-3 px-5 py-4 bg-gray-900 border-b border-gray-800">
+        <span className="text-violet-400">{TOOL_ICONS[tool.icon]}</span>
+        <div className="flex-1">
+          <div className="flex items-center gap-3">
+            <h3 className="text-white font-medium text-sm">{tool.label}</h3>
+            <span className="text-xs font-mono text-gray-600 bg-gray-800 border border-gray-700 px-2 py-0.5 rounded">
+              {tool.name}
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 mt-0.5">Source : {tool.source}</p>
+        </div>
+      </div>
+
+      {/* Info */}
+      <div className="px-5 py-4 space-y-4 bg-gray-900/50">
+        <div>
+          <p className="text-xs text-gray-500 uppercase tracking-widest mb-1.5">Description</p>
+          <p className="text-sm text-gray-300 leading-relaxed">{tool.description}</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-xs text-gray-500 uppercase tracking-widest mb-1.5">Paramètre</p>
+            <div className="flex items-center gap-2 bg-gray-900 border border-gray-800 rounded-lg px-3 py-2">
+              <span className="text-violet-400 text-xs font-mono">{tool.input_label}</span>
+              <span className="text-gray-600 text-xs">string</span>
+            </div>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 uppercase tracking-widest mb-1.5">Exemple</p>
+            <button
+              onClick={() => setInput(tool.input_example)}
+              className="w-full text-left bg-gray-900 hover:bg-gray-800 border border-gray-800 hover:border-gray-700 rounded-lg px-3 py-2 transition-colors"
+            >
+              <span className="text-green-400 text-xs font-mono">"{tool.input_example}"</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Test zone */}
+      <div className="px-5 py-4 border-t border-gray-800 bg-gray-950/50 space-y-3">
+        <p className="text-xs text-gray-500 uppercase tracking-widest">Tester manuellement</p>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && runTool()}
+            placeholder={tool.input_example}
+            className="flex-1 bg-gray-900 border border-gray-700 focus:border-violet-500 focus:outline-none text-white text-sm rounded-lg px-3 py-2 placeholder-gray-600"
+          />
+          <button
+            onClick={runTool}
+            disabled={loading || !input.trim()}
+            className="flex items-center gap-2 bg-violet-700 hover:bg-violet-600 disabled:bg-gray-700 disabled:cursor-not-allowed text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors shrink-0"
+          >
+            {loading ? (
+              <span className="animate-spin text-xs">⟳</span>
+            ) : (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+            )}
+            {loading ? 'En cours…' : 'Exécuter'}
+          </button>
+        </div>
+
+        {error && (
+          <div className="bg-red-950 border border-red-800 text-red-400 rounded-lg p-3 text-sm">
+            {error}
+          </div>
+        )}
+
+        {result !== null && (
+          <div className="space-y-1.5">
+            <p className="text-xs text-gray-600 uppercase tracking-widest">Résultat</p>
+            <pre className="bg-gray-900 border border-gray-800 rounded-lg p-4 text-xs text-gray-300 whitespace-pre-wrap leading-relaxed overflow-x-auto max-h-72 overflow-y-auto">
+              {result}
+            </pre>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function ToolsTab({ toolsInfo }: { toolsInfo: ToolInfo[] }) {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3 bg-violet-950/30 border border-violet-900/50 rounded-lg px-4 py-3 mb-6">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-violet-400 shrink-0">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        </svg>
+        <p className="text-violet-300 text-sm">
+          Ces outils sont invoqués automatiquement par l'agent. Vous pouvez aussi les tester directement ci-dessous.
+        </p>
+      </div>
+      {toolsInfo.map(tool => <ToolCard key={tool.name} tool={tool} />)}
     </div>
   )
 }
