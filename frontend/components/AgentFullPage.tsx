@@ -73,7 +73,10 @@ function fmtCost(eur: number): string {
 
 type Tab = 'use' | 'config' | 'docs' | 'knowledge' | 'tools'
 
-const TYPE_ICON: Record<string, string> = { chatbot: '🧑', analyse: '🤖' }
+const PROVIDER_CHIP: Record<string, string> = {
+  mistral: 'bg-orange-950/60 border-orange-900/60 text-orange-400',
+  claude:  'bg-violet-950/60 border-violet-900/60 text-violet-400',
+}
 
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -93,39 +96,47 @@ export default function AgentFullPage({ detail }: { detail: AgentDetail }) {
 
   return (
     <div className="h-screen bg-gray-950 text-white flex flex-col overflow-hidden">
-      <header className="border-b border-gray-800 px-8 py-5 flex items-center gap-4 shrink-0">
-        <Link href="/" className="text-gray-500 hover:text-white text-sm transition-colors">
-          ← Marketplace
-        </Link>
-        <span className="text-gray-700">/</span>
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">{TYPE_ICON[config.type] ?? '🤖'}</span>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="font-semibold text-lg leading-none">{config.name}</h1>
-              {config.badge === 'bug' && (
-                <span className="text-xs bg-red-950 border border-red-800 text-red-400 px-2 py-0.5 rounded-full font-medium">bug</span>
-              )}
+
+      {/* ── Header ── */}
+      <header className="sticky top-0 z-50 border-b border-gray-800/80 bg-gray-950/90 backdrop-blur-md shrink-0">
+        <div className="px-6 py-3 flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-2 text-gray-500 hover:text-gray-300 transition-colors group">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+            <div className="w-5 h-5 rounded bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shrink-0">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
             </div>
-            <p className="text-gray-500 text-xs mt-1">{config.description}</p>
+          </Link>
+
+          <span className="text-gray-700 text-sm">/</span>
+
+          <div className="flex items-center gap-2 min-w-0">
+            <h1 className="font-semibold text-white text-sm truncate">{config.name}</h1>
+            {config.badge === 'bug' && (
+              <span className="shrink-0 text-[10px] bg-red-950 border border-red-800 text-red-400 px-1.5 py-0.5 rounded-full font-medium">bug</span>
+            )}
           </div>
-        </div>
-        <div className="ml-auto flex items-center gap-2">
-          <span className="text-xs bg-blue-950 border border-blue-900 text-blue-400 px-2 py-0.5 rounded-full">
-            {config.provider ?? 'mistral'}
-          </span>
-          <span className="text-xs bg-gray-800 border border-gray-700 text-gray-400 px-2 py-0.5 rounded-full">
-            {config.type}
-          </span>
+
+          <p className="hidden sm:block text-gray-600 text-xs truncate max-w-xs ml-1">— {config.description}</p>
+
+          <div className="ml-auto flex items-center gap-1.5 shrink-0">
+            <span className={`text-[10px] font-semibold border px-2 py-0.5 rounded-full ${PROVIDER_CHIP[config.provider ?? 'mistral'] ?? 'bg-gray-800 border-gray-700 text-gray-400'}`}>
+              {config.provider ?? 'mistral'}
+            </span>
+          </div>
         </div>
       </header>
 
-      <nav className="border-b border-gray-800 px-8 flex gap-1 shrink-0">
+      {/* ── Tabs ── */}
+      <nav className="border-b border-gray-800 px-6 flex gap-0.5 shrink-0 bg-gray-950">
         {(['use', 'config', 'docs'] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px ${
+            className={`px-4 py-3 text-xs font-medium border-b-2 transition-colors -mb-px ${
               tab === t
                 ? 'border-blue-500 text-white'
                 : 'border-transparent text-gray-500 hover:text-gray-300'
@@ -137,38 +148,29 @@ export default function AgentFullPage({ detail }: { detail: AgentDetail }) {
         {hasTools && (
           <button
             onClick={() => setTab('tools')}
-            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px flex items-center gap-2 ${
-              tab === 'tools'
-                ? 'border-violet-400 text-violet-300'
-                : 'border-transparent text-gray-500 hover:text-gray-300'
+            className={`px-4 py-3 text-xs font-medium border-b-2 transition-colors -mb-px flex items-center gap-1.5 ${
+              tab === 'tools' ? 'border-violet-400 text-violet-300' : 'border-transparent text-gray-500 hover:text-gray-300'
             }`}
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
             </svg>
             Outils
-            <span className="text-xs bg-violet-950 border border-violet-800 text-violet-400 px-1.5 py-0.5 rounded-full leading-none">
-              {tools_info.length}
-            </span>
+            <span className="text-[10px] bg-violet-950 border border-violet-800 text-violet-400 px-1.5 py-0.5 rounded-full leading-none">{tools_info.length}</span>
           </button>
         )}
         {hasKnowledge && (
           <button
             onClick={() => setTab('knowledge')}
-            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px flex items-center gap-2 ${
-              tab === 'knowledge'
-                ? 'border-amber-400 text-amber-300'
-                : 'border-transparent text-gray-500 hover:text-gray-300'
+            className={`px-4 py-3 text-xs font-medium border-b-2 transition-colors -mb-px flex items-center gap-1.5 ${
+              tab === 'knowledge' ? 'border-amber-400 text-amber-300' : 'border-transparent text-gray-500 hover:text-gray-300'
             }`}
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
             </svg>
             Connaissances
-            <span className="text-xs bg-amber-950 border border-amber-800 text-amber-400 px-1.5 py-0.5 rounded-full leading-none">
-              {knowledge.length}
-            </span>
+            <span className="text-[10px] bg-amber-950 border border-amber-800 text-amber-400 px-1.5 py-0.5 rounded-full leading-none">{knowledge.length}</span>
           </button>
         )}
       </nav>
@@ -187,6 +189,8 @@ export default function AgentFullPage({ detail }: { detail: AgentDetail }) {
   )
 }
 
+/* ─── Gmail Button ─── */
+
 function GmailButton({ onConnect, session }: { onConnect: (s: string) => void; session: string | null }) {
   const connect = async () => {
     const res = await fetch('/api/config')
@@ -198,19 +202,54 @@ function GmailButton({ onConnect, session }: { onConnect: (s: string) => void; s
     window.addEventListener('message', onMsg)
   }
   if (session) return (
-    <div className="flex items-center gap-3 bg-green-950 border border-green-800 rounded-lg p-3">
-      <span className="text-green-400">✓</span>
+    <div className="flex items-center gap-3 bg-green-950/50 border border-green-800/60 rounded-lg px-3 py-2.5">
+      <div className="w-5 h-5 bg-green-900/60 rounded-full flex items-center justify-center shrink-0">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="text-green-400"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
       <p className="text-green-400 text-sm font-medium flex-1">Gmail connecté</p>
-      <button onClick={() => onConnect('')} className="text-xs text-green-800 hover:text-green-500">Déconnecter</button>
+      <button onClick={() => onConnect('')} className="text-xs text-green-700 hover:text-green-500 transition-colors">Déconnecter</button>
     </div>
   )
   return (
-    <button onClick={connect} className="flex items-center gap-3 bg-white hover:bg-gray-100 text-gray-800 font-medium py-2.5 px-5 rounded-lg text-sm transition-colors">
+    <button onClick={connect} className="flex items-center gap-2.5 bg-white hover:bg-gray-100 text-gray-800 font-medium py-2.5 px-4 rounded-lg text-sm transition-colors w-fit">
       <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       Se connecter avec Google
     </button>
   )
 }
+
+/* ─── Tool icons ─── */
+
+const TOOL_ICONS: Record<string, React.ReactNode> = {
+  search: (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+  ),
+  globe: (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+    </svg>
+  ),
+  code: (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+    </svg>
+  ),
+  building: (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M3 9h6"/><path d="M3 15h6"/>
+    </svg>
+  ),
+  contact: (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+    </svg>
+  ),
+}
+
+/* ─── ToolCallResult ─── */
 
 function ToolCallResult({ tc, toolsInfo }: { tc: ToolCallRecord; toolsInfo: ToolInfo[] }) {
   const [open, setOpen] = useState(false)
@@ -218,74 +257,72 @@ function ToolCallResult({ tc, toolsInfo }: { tc: ToolCallRecord; toolsInfo: Tool
   const label = info?.label ?? tc.tool.replace(/_/g, ' ')
   const icon = info ? TOOL_ICONS[info.icon] : null
   const isDone = tc.status === 'done'
-
   const lineCount = tc.result ? tc.result.split('\n').length : 0
 
   return (
-    <div className={`border rounded-lg overflow-hidden text-xs transition-colors ${
-      isDone ? 'border-violet-900/60' : 'border-gray-800'
-    }`}>
+    <div className={`rounded-xl overflow-hidden border transition-colors ${isDone ? 'border-violet-900/50 bg-violet-950/10' : 'border-gray-800 bg-gray-900/40'}`}>
+
       {/* Header */}
       <button
         onClick={() => isDone && setOpen(o => !o)}
         disabled={!isDone}
-        className={`w-full flex items-center gap-2 px-3 py-2 text-left transition-colors ${
-          isDone ? 'hover:bg-violet-950/30 cursor-pointer bg-violet-950/20' : 'cursor-default bg-gray-900'
-        }`}
+        className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors ${isDone ? 'cursor-pointer hover:bg-violet-950/20' : 'cursor-default'}`}
       >
-        {isDone ? (
-          <svg
-            width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-            className={`text-violet-500 transition-transform shrink-0 ${open ? 'rotate-180' : ''}`}
-          >
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
-        ) : (
-          <span className="w-2.5 h-2.5 shrink-0 flex items-center justify-center">
-            <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-ping" />
-          </span>
+        {/* Status icon */}
+        <div className="shrink-0 w-4 h-4 flex items-center justify-center">
+          {isDone ? (
+            <div className="w-4 h-4 rounded-full bg-violet-900/60 border border-violet-700/60 flex items-center justify-center">
+              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="text-violet-400"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+          ) : (
+            <span className="w-3 h-3 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+          )}
+        </div>
+
+        {/* Tool icon + label */}
+        <span className={`shrink-0 ${isDone ? 'text-violet-400' : 'text-gray-500'}`}>{icon}</span>
+        <span className={`text-xs font-medium ${isDone ? 'text-violet-200' : 'text-gray-400'}`}>{label}</span>
+
+        {/* Running indicator */}
+        {!isDone && (
+          <span className="text-xs text-violet-500 animate-pulse ml-1">en cours…</span>
         )}
 
-        <span className="text-violet-400 shrink-0">{icon}</span>
-        <span className={`font-medium ${isDone ? 'text-violet-300' : 'text-gray-400'}`}>{label}</span>
-
-        {isDone ? (
-          <span className="ml-auto flex items-center gap-2 text-violet-600">
-            {tc.tokens && tc.tokens > 0 && (
-              <span className="font-mono text-gray-500 bg-gray-800/60 px-1.5 py-0.5 rounded text-[10px]">
-                {fmtTokens(tc.tokens)} tok
+        {/* Done: meta + toggle */}
+        {isDone && (
+          <div className="ml-auto flex items-center gap-1.5 shrink-0">
+            {tc.tokens !== undefined && tc.tokens > 0 && (
+              <span className="flex items-center gap-1 text-[11px] font-mono text-gray-400 bg-gray-800 border border-gray-700/80 px-1.5 py-0.5 rounded-md">
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-gray-500"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                {fmtTokens(tc.tokens)}
               </span>
             )}
             {tc.cost_eur !== undefined && tc.cost_eur > 0 && (
-              <span className="font-mono text-emerald-700 bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px]">
+              <span className="text-[11px] font-mono text-emerald-400 bg-emerald-950/50 border border-emerald-900/60 px-1.5 py-0.5 rounded-md">
                 {fmtCost(tc.cost_eur)}
               </span>
             )}
             {lineCount > 0 && (
-              <span className="text-gray-600">{lineCount} ligne{lineCount > 1 ? 's' : ''}</span>
+              <span className="text-[11px] text-gray-600">{lineCount}L</span>
             )}
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            {open ? 'Réduire' : 'Afficher'}
-          </span>
-        ) : (
-          <span className="ml-auto text-violet-500 animate-pulse">en cours…</span>
+            <span className={`text-[11px] text-violet-500 font-medium flex items-center gap-0.5 ml-0.5`}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={`transition-transform ${open ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"/></svg>
+              {open ? 'Réduire' : 'Voir'}
+            </span>
+          </div>
         )}
       </button>
 
-      {/* Résultat */}
+      {/* Expanded result */}
       {open && tc.result && (
-        <div className="border-t border-violet-900/40 bg-gray-950">
-          <pre className="text-gray-400 whitespace-pre-wrap leading-relaxed overflow-y-auto max-h-64 font-mono p-3 text-[11px]">
+        <div className="border-t border-violet-900/30">
+          <pre className="text-gray-300 whitespace-pre-wrap leading-relaxed overflow-y-auto max-h-72 font-mono p-4 text-[11px] bg-gray-950/60">
             {tc.result}
           </pre>
-          <div className="flex justify-end px-3 pb-2">
-            <button
-              onClick={() => setOpen(false)}
-              className="text-gray-600 hover:text-gray-400 text-xs"
-            >
-              Réduire ↑
+          <div className="flex justify-end px-3 py-2 border-t border-violet-900/20">
+            <button onClick={() => setOpen(false)} className="text-[11px] text-gray-600 hover:text-gray-400 transition-colors flex items-center gap-1">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="18 15 12 9 6 15"/></svg>
+              Réduire
             </button>
           </div>
         </div>
@@ -294,46 +331,27 @@ function ToolCallResult({ tc, toolsInfo }: { tc: ToolCallRecord; toolsInfo: Tool
   )
 }
 
-function RobotIcon({ className }: { className?: string }) {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
-      <rect x="3" y="8" width="18" height="12" rx="2"/>
-      <path d="M12 8V4"/>
-      <circle cx="12" cy="3" r="1"/>
-      <rect x="7" y="12" width="3" height="2" rx="0.5" fill="currentColor" stroke="none"/>
-      <rect x="14" y="12" width="3" height="2" rx="0.5" fill="currentColor" stroke="none"/>
-      <path d="M9 17h6"/>
-      <path d="M3 13h1M20 13h1"/>
-    </svg>
-  )
-}
+/* ─── ToolCallIndicator (loading) ─── */
 
 function ToolCallIndicator({ toolName, toolsInfo }: { toolName: string; toolsInfo: ToolInfo[] }) {
   const info = toolsInfo.find(t => t.name === toolName)
   const label = info?.label ?? toolName.replace(/_/g, ' ')
   const icon = info ? TOOL_ICONS[info.icon] : null
-  const source = info?.source ?? null
 
   return (
     <div>
-      <p className="text-gray-600 text-xs mb-1.5 uppercase tracking-wide">Agent</p>
-      <div className="flex items-center gap-3 bg-gray-900 border border-violet-900/50 rounded-xl px-4 py-3 w-fit max-w-sm">
-        {/* Robot avatar pulsant */}
-        <div className="w-9 h-9 bg-violet-950 border border-violet-800/60 rounded-lg flex items-center justify-center shrink-0 animate-pulse">
-          <RobotIcon className="text-violet-400" />
+      <p className="text-gray-600 text-[11px] mb-2 uppercase tracking-widest">Agent</p>
+      <div className="flex items-center gap-3 bg-gray-900 border border-violet-900/50 rounded-xl px-4 py-3 w-fit max-w-xs">
+        <div className="w-7 h-7 bg-violet-950 border border-violet-800/60 rounded-lg flex items-center justify-center shrink-0">
+          <span className="w-2 h-2 bg-violet-400 rounded-full animate-ping" />
         </div>
-
-        {/* Texte */}
         <div className="min-w-0">
-          <p className="text-xs text-gray-500 leading-none mb-1">Utilisation d'un outil</p>
+          <p className="text-[11px] text-gray-500 leading-none mb-1">Outil en cours</p>
           <div className="flex items-center gap-1.5">
             {icon && <span className="text-violet-400 shrink-0">{icon}</span>}
             <span className="text-sm text-violet-200 font-medium truncate">{label}</span>
           </div>
-          {source && <p className="text-xs text-gray-600 mt-0.5">{source}</p>}
         </div>
-
-        {/* Dots animés */}
         <div className="flex gap-1 ml-1 shrink-0">
           <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
           <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -344,30 +362,7 @@ function ToolCallIndicator({ toolName, toolsInfo }: { toolName: string; toolsInf
   )
 }
 
-const TOOL_ICONS: Record<string, React.ReactNode> = {
-  search: (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-    </svg>
-  ),
-  globe: (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
-      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-    </svg>
-  ),
-  building: (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M3 9h6"/><path d="M3 15h6"/><path d="M15 3v18"/><path d="M15 9h6"/><path d="M15 15h6"/>
-    </svg>
-  ),
-  contact: (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-      <circle cx="12" cy="7" r="4"/>
-    </svg>
-  ),
-}
+/* ─── UseTab ─── */
 
 function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInfo[] }) {
   const [activeSessionId, setActiveSessionId] = useState<string>(() => generateUUID())
@@ -382,6 +377,8 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
   const [activeTool, setActiveTool] = useState<string | null>(null)
   const [costConfig, setCostConfig] = useState<CostConfig | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const shouldAutoScroll = useRef(true)
 
   useEffect(() => {
     fetch('/api/config').then(r => r.json()).then(d => {
@@ -389,7 +386,16 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
     }).catch(() => {})
   }, [])
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, loading])
+  useEffect(() => {
+    if (!shouldAutoScroll.current) return
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, loading])
+
+  const handleScroll = () => {
+    const el = scrollContainerRef.current
+    if (!el) return
+    shouldAutoScroll.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120
+  }
 
   const fetchSessions = useCallback(async () => {
     try {
@@ -427,6 +433,7 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
   }
 
   const startNewSession = () => {
+    shouldAutoScroll.current = true
     setActiveSessionId(generateUUID())
     setMessages([])
     setError(null)
@@ -458,6 +465,7 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
 
   const handleRun = async () => {
     if (!isReady()) return
+    shouldAutoScroll.current = true
     const userMsg = getDisplayInput()
     setMessages(prev => [...prev, { role: 'user', content: userMsg }, { role: 'assistant', content: '' }])
     if (isText) setTextInput('')
@@ -528,75 +536,106 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
 
   return (
     <div className="flex flex-1 overflow-hidden min-h-0">
-      {/* ── Sidebar sessions ── */}
-      <aside className="w-60 border-r border-gray-800 flex flex-col shrink-0 bg-gray-900/50">
-        <div className="p-3 border-b border-gray-800">
+
+      {/* ── Sidebar ── */}
+      <aside className="w-64 border-r border-gray-800/80 flex flex-col shrink-0 bg-gray-900/30">
+
+        {/* New conversation button */}
+        <div className="p-3 border-b border-gray-800/80">
           <button
             onClick={startNewSession}
-            className="w-full flex items-center gap-2 text-sm text-gray-300 hover:text-white bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-600 rounded-lg px-3 py-2 transition-all"
+            className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 rounded-xl px-3 py-2.5 transition-all shadow-lg shadow-blue-900/30 active:scale-95"
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
             Nouvelle conversation
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        {/* Sessions list */}
+        <div className="flex-1 overflow-y-auto py-1">
+
+          {/* Current new session indicator */}
           {isNewSession && (
-            <div className="border-b border-gray-800/60 bg-gray-800/40 px-4 py-3">
-              <p className="text-xs text-blue-400 font-medium truncate">Nouvelle conversation</p>
-              <p className="text-xs text-gray-600 mt-0.5">en cours…</p>
+            <div className="mx-2 mb-1 flex items-center gap-2 bg-blue-950/40 border border-blue-900/40 rounded-lg px-3 py-2.5">
+              <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs text-blue-300 font-medium leading-none">Nouvelle conversation</p>
+                <p className="text-[11px] text-blue-700 mt-0.5">en cours…</p>
+              </div>
             </div>
           )}
 
           {sessions.length === 0 && !isNewSession && (
-            <p className="text-xs text-gray-600 text-center mt-6 px-4">Aucune session sauvegardée.</p>
+            <div className="text-center py-10 px-4">
+              <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center mx-auto mb-3">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-600">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+              </div>
+              <p className="text-xs text-gray-600">Aucune conversation</p>
+            </div>
           )}
 
-          {sessions.map(s => (
-            <button
-              key={s.session_id}
-              onClick={() => loadSession(s.session_id)}
-              className={`w-full text-left px-4 py-3 border-b border-gray-800/60 transition-colors ${
-                s.session_id === activeSessionId && !isNewSession
-                  ? 'bg-gray-800 border-l-2 border-l-blue-500'
-                  : 'hover:bg-gray-800/60'
-              }`}
-            >
-              <p className="text-sm text-gray-200 truncate leading-snug">
-                {s.title || 'Conversation'}
-              </p>
-              <p className="text-xs text-gray-600 mt-0.5 flex items-center gap-1.5">
-                <span>{timeAgo(s.updated_at)}</span>
-                <span>·</span>
-                <span>{s.message_count} msg</span>
-                {(s.input_tokens + s.output_tokens) > 0 && (() => {
-                  const rates = costConfig?.[config.provider as keyof CostConfig] ?? costConfig?.mistral
-                  const cost = rates
-                    ? (s.input_tokens * rates.cost_input_per_m + s.output_tokens * rates.cost_output_per_m) / 1_000_000
-                    : null
-                  return (
-                    <>
-                      <span>·</span>
-                      <span className="font-mono">{fmtTokens(s.input_tokens + s.output_tokens)} tok</span>
-                      {cost !== null && <span className="text-gray-700">{fmtCost(cost)}</span>}
-                    </>
-                  )
-                })()}
-              </p>
-            </button>
-          ))}
+          {sessions.map(s => {
+            const isActive = s.session_id === activeSessionId && !isNewSession
+            const totalTokens = s.input_tokens + s.output_tokens
+            const rates = costConfig?.[config.provider as keyof CostConfig] ?? costConfig?.mistral
+            const cost = rates && totalTokens > 0
+              ? (s.input_tokens * rates.cost_input_per_m + s.output_tokens * rates.cost_output_per_m) / 1_000_000
+              : null
+
+            return (
+              <button
+                key={s.session_id}
+                onClick={() => loadSession(s.session_id)}
+                className={`w-full text-left px-3 py-2.5 mx-0 transition-all rounded-none border-b border-gray-800/40 ${
+                  isActive
+                    ? 'bg-gray-800/60 border-l-2 border-l-blue-500 pl-2.5'
+                    : 'hover:bg-gray-800/30'
+                }`}
+              >
+                {/* Title */}
+                <p className={`text-xs font-medium truncate leading-snug mb-1.5 ${isActive ? 'text-white' : 'text-gray-300'}`}>
+                  {s.title || 'Conversation'}
+                </p>
+
+                {/* Time + messages */}
+                <div className="flex items-center gap-1.5 text-[11px] text-gray-600 mb-1">
+                  <span>{timeAgo(s.updated_at)}</span>
+                  <span className="text-gray-700">·</span>
+                  <span>{s.message_count} msg</span>
+                </div>
+
+                {/* Tokens + cost */}
+                {totalTokens > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    <span className="flex items-center gap-1 text-[11px] font-mono text-gray-500 bg-gray-800/60 border border-gray-700/50 px-1.5 py-0.5 rounded">
+                      <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-gray-600"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                      {fmtTokens(totalTokens)}
+                    </span>
+                    {cost !== null && cost > 0 && (
+                      <span className="text-[11px] font-mono text-emerald-500 bg-emerald-950/40 border border-emerald-900/50 px-1.5 py-0.5 rounded">
+                        {fmtCost(cost)}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </button>
+            )
+          })}
         </div>
 
+        {/* Active tools list */}
         {toolsInfo.length > 0 && (
-          <div className="border-t border-gray-800 p-3 shrink-0">
-            <p className="text-xs text-gray-600 uppercase tracking-widest mb-2 px-1">Outils actifs</p>
+          <div className="border-t border-gray-800/80 p-3 shrink-0">
+            <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-2 px-1 font-semibold">Outils actifs</p>
             <div className="space-y-1">
               {toolsInfo.map(t => (
-                <div key={t.name} className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-violet-950/30 border border-violet-900/40">
+                <div key={t.name} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-violet-950/20 border border-violet-900/30">
                   <span className="text-violet-400 shrink-0">{TOOL_ICONS[t.icon]}</span>
-                  <span className="text-xs text-violet-300 truncate">{t.label}</span>
+                  <span className="text-[11px] text-violet-300 truncate">{t.label}</span>
                 </div>
               ))}
             </div>
@@ -604,58 +643,63 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
         )}
       </aside>
 
-      {/* ── Chat area ── */}
+      {/* ── Chat ── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-8 py-6 space-y-5">
+        <div ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
           {loadingHistory ? (
             <div className="flex justify-center items-center h-32 text-gray-600 text-sm gap-2">
-              <span className="animate-spin">⟳</span> Chargement de la conversation…
+              <span className="w-4 h-4 border-2 border-gray-600 border-t-gray-400 rounded-full animate-spin" />
+              Chargement…
             </div>
           ) : messages.length === 0 ? (
-            <div className="text-center py-16 text-gray-700">
-              <p className="text-3xl mb-3">💬</p>
-              <p className="text-sm">Démarrez la conversation avec cet agent.</p>
-              <p className="text-xs mt-1 text-gray-600">La mémoire est active — il se souviendra du contexte.</p>
+            <div className="flex flex-col items-center justify-center h-full pb-16 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-gray-900 border border-gray-800 flex items-center justify-center mb-4">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-600">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+              </div>
+              <p className="text-sm text-gray-500 font-medium mb-1">Démarrez la conversation</p>
+              <p className="text-xs text-gray-600 max-w-xs leading-relaxed">La mémoire est active — l'agent se souviendra du contexte entre les sessions.</p>
             </div>
           ) : (
             messages.map((msg, i) => (
               <div key={i}>
                 {msg.role === 'user' ? (
                   <div className="flex justify-end">
-                    <div className="bg-blue-900 border border-blue-800 text-blue-100 text-sm px-4 py-2.5 rounded-xl max-w-[80%] leading-relaxed whitespace-pre-wrap">
+                    <div className="bg-blue-600/20 border border-blue-500/30 text-blue-50 text-sm px-4 py-3 rounded-2xl rounded-tr-sm max-w-[78%] leading-relaxed whitespace-pre-wrap">
                       {msg.content}
                     </div>
                   </div>
                 ) : (
-                  <div>
-                    <p className="text-gray-600 text-xs mb-1.5 uppercase tracking-wide">Agent</p>
+                  <div className="space-y-2">
+                    <p className="text-gray-600 text-[11px] uppercase tracking-widest font-medium">Agent</p>
                     {msg.tool_calls && msg.tool_calls.length > 0 && (
-                      <div className="space-y-1.5 mb-3">
+                      <div className="space-y-1.5">
                         {msg.tool_calls.map((tc, j) => (
                           <ToolCallResult key={j} tc={tc} toolsInfo={toolsInfo} />
                         ))}
                       </div>
                     )}
-                    {msg.content && <MarkdownResult content={msg.content} />}
+                    {msg.content && <MarkdownResult content={msg.content} isStreaming={loading && i === messages.length - 1} />}
                   </div>
                 )}
               </div>
             ))
           )}
 
+          {/* Loading state */}
           {loading && (
-            <div className="mt-2">
+            <div className="space-y-2">
+              <p className="text-gray-600 text-[11px] uppercase tracking-widest font-medium">Agent</p>
               {activeTool ? (
                 <ToolCallIndicator toolName={activeTool} toolsInfo={toolsInfo} />
               ) : (
-                <div>
-                  <p className="text-gray-600 text-xs mb-1.5 uppercase tracking-wide">Agent</p>
-                  <div className="flex items-center gap-1.5 px-4 py-3">
-                    <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </div>
+                <div className="flex items-center gap-1.5 px-1 py-2">
+                  <span className="w-2 h-2 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-2 h-2 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-2 h-2 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
               )}
             </div>
@@ -663,22 +707,24 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
           <div ref={bottomRef} />
         </div>
 
+        {/* Error */}
         {error && (
-          <div className="mx-8 mb-3 bg-red-950 border border-red-800 text-red-400 rounded-lg p-3 text-sm shrink-0">
+          <div className="mx-6 mb-3 bg-red-950/60 border border-red-800/60 text-red-400 rounded-xl p-3 text-sm shrink-0 flex items-start gap-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             {error}
           </div>
         )}
 
-        {/* Input */}
-        <div className="shrink-0 px-8 pb-6 pt-3 border-t border-gray-800">
-          <div className="border border-gray-800 rounded-xl bg-gray-900 p-3 space-y-3">
+        {/* Input area */}
+        <div className="shrink-0 px-6 pb-5 pt-3 border-t border-gray-800/80">
+          <div className="border border-gray-800 hover:border-gray-700 focus-within:border-gray-600 rounded-2xl bg-gray-900/60 p-3 space-y-3 transition-colors">
             {(config.input.type === 'gmail' || config.input.type === 'gestion') && (
               <GmailButton session={gmailSession} onConnect={s => setGmailSession(s || null)} />
             )}
             {config.input.type === 'url' && (
               <input
                 type="url"
-                className="w-full bg-gray-950 text-white rounded-lg px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm"
+                className="w-full bg-gray-950 text-white rounded-lg px-3 py-2.5 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm transition-colors"
                 placeholder={config.input.placeholder}
                 value={urlInput}
                 onChange={e => setUrlInput(e.target.value)}
@@ -686,7 +732,7 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
             )}
             {isText && (
               <textarea
-                className="w-full bg-gray-950 text-white rounded-lg px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm resize-none"
+                className="w-full bg-transparent text-white placeholder-gray-600 text-sm resize-none focus:outline-none leading-relaxed"
                 placeholder={messages.length > 0 ? 'Continuez la conversation…' : config.input.placeholder}
                 value={textInput}
                 rows={3}
@@ -695,14 +741,14 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
               />
             )}
             <div className="flex items-center justify-between">
-              <p className="text-gray-700 text-xs">⌘ + Entrée pour envoyer</p>
+              <p className="text-gray-700 text-[11px]">⌘ Entrée pour envoyer</p>
               <button
                 onClick={handleRun}
                 disabled={loading || !isReady()}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-medium py-2 px-5 rounded-lg text-sm transition-colors"
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-600 disabled:cursor-not-allowed text-white font-semibold py-2 px-5 rounded-xl text-sm transition-all active:scale-95 shadow-lg shadow-blue-900/20"
               >
                 {loading ? 'En cours…' : 'Envoyer'}
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
                 </svg>
               </button>
@@ -713,6 +759,8 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
     </div>
   )
 }
+
+/* ─── ToolCard (onglet Outils) ─── */
 
 function ToolCard({ tool }: { tool: ToolInfo }) {
   const [input, setInput] = useState('')
@@ -742,51 +790,54 @@ function ToolCard({ tool }: { tool: ToolInfo }) {
   }
 
   return (
-    <div className="border border-gray-800 rounded-xl overflow-hidden">
+    <div className="border border-gray-800 rounded-2xl overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-3 px-5 py-4 bg-gray-900 border-b border-gray-800">
-        <span className="text-violet-400">{TOOL_ICONS[tool.icon]}</span>
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h3 className="text-white font-medium text-sm">{tool.label}</h3>
-            <span className="text-xs font-mono text-gray-600 bg-gray-800 border border-gray-700 px-2 py-0.5 rounded">
+      <div className="flex items-center gap-3 px-5 py-4 bg-gray-900/60 border-b border-gray-800">
+        <div className="w-8 h-8 rounded-lg bg-violet-950/60 border border-violet-900/50 flex items-center justify-center shrink-0">
+          <span className="text-violet-400">{TOOL_ICONS[tool.icon]}</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2.5 mb-0.5">
+            <h3 className="text-white font-semibold text-sm">{tool.label}</h3>
+            <span className="text-[11px] font-mono text-gray-600 bg-gray-800 border border-gray-700 px-2 py-0.5 rounded-md">
               {tool.name}
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">Source : {tool.source}</p>
+          <p className="text-[11px] text-gray-600">Source : {tool.source}</p>
         </div>
       </div>
 
-      {/* Info */}
-      <div className="px-5 py-4 space-y-4 bg-gray-900/50">
+      <div className="px-5 py-4 space-y-4 bg-gray-900/30">
+        {/* Description */}
         <div>
-          <p className="text-xs text-gray-500 uppercase tracking-widest mb-1.5">Description</p>
+          <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-2 font-semibold">Description</p>
           <p className="text-sm text-gray-300 leading-relaxed">{tool.description}</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        {/* Param + example */}
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <p className="text-xs text-gray-500 uppercase tracking-widest mb-1.5">Paramètre</p>
+            <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-2 font-semibold">Paramètre</p>
             <div className="flex items-center gap-2 bg-gray-900 border border-gray-800 rounded-lg px-3 py-2">
               <span className="text-violet-400 text-xs font-mono">{tool.input_label}</span>
-              <span className="text-gray-600 text-xs">string</span>
+              <span className="text-gray-600 text-[11px]">string</span>
             </div>
           </div>
           <div>
-            <p className="text-xs text-gray-500 uppercase tracking-widest mb-1.5">Exemple</p>
+            <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-2 font-semibold">Exemple</p>
             <button
               onClick={() => setInput(tool.input_example)}
               className="w-full text-left bg-gray-900 hover:bg-gray-800 border border-gray-800 hover:border-gray-700 rounded-lg px-3 py-2 transition-colors"
             >
-              <span className="text-green-400 text-xs font-mono">"{tool.input_example}"</span>
+              <span className="text-emerald-400 text-[11px] font-mono truncate block">&ldquo;{tool.input_example}&rdquo;</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Test zone */}
-      <div className="px-5 py-4 border-t border-gray-800 bg-gray-950/50 space-y-3">
-        <p className="text-xs text-gray-500 uppercase tracking-widest">Tester manuellement</p>
+      <div className="px-5 py-4 border-t border-gray-800 bg-gray-950/40 space-y-3">
+        <p className="text-[10px] text-gray-600 uppercase tracking-widest font-semibold">Tester manuellement</p>
         <div className="flex gap-2">
           <input
             type="text"
@@ -794,34 +845,32 @@ function ToolCard({ tool }: { tool: ToolInfo }) {
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && runTool()}
             placeholder={tool.input_example}
-            className="flex-1 bg-gray-900 border border-gray-700 focus:border-violet-500 focus:outline-none text-white text-sm rounded-lg px-3 py-2 placeholder-gray-600"
+            className="flex-1 bg-gray-900 border border-gray-700 focus:border-violet-500 focus:outline-none text-white text-sm rounded-xl px-3 py-2.5 placeholder-gray-600 transition-colors"
           />
           <button
             onClick={runTool}
             disabled={loading || !input.trim()}
-            className="flex items-center gap-2 bg-violet-700 hover:bg-violet-600 disabled:bg-gray-700 disabled:cursor-not-allowed text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors shrink-0"
+            className="flex items-center gap-2 bg-violet-700 hover:bg-violet-600 disabled:bg-gray-800 disabled:text-gray-600 disabled:cursor-not-allowed text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-all active:scale-95 shrink-0"
           >
             {loading ? (
-              <span className="animate-spin text-xs">⟳</span>
+              <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                <polygon points="5 3 19 12 5 21 5 3"/>
-              </svg>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
             )}
             {loading ? 'En cours…' : 'Exécuter'}
           </button>
         </div>
 
         {error && (
-          <div className="bg-red-950 border border-red-800 text-red-400 rounded-lg p-3 text-sm">
+          <div className="bg-red-950/50 border border-red-800/60 text-red-400 rounded-xl p-3 text-sm">
             {error}
           </div>
         )}
 
         {result !== null && (
-          <div className="space-y-1.5">
-            <p className="text-xs text-gray-600 uppercase tracking-widest">Résultat</p>
-            <pre className="bg-gray-900 border border-gray-800 rounded-lg p-4 text-xs text-gray-300 whitespace-pre-wrap leading-relaxed overflow-x-auto max-h-72 overflow-y-auto">
+          <div className="space-y-2">
+            <p className="text-[10px] text-gray-600 uppercase tracking-widest font-semibold">Résultat</p>
+            <pre className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-[11px] text-gray-300 whitespace-pre-wrap leading-relaxed overflow-x-auto max-h-72 overflow-y-auto font-mono">
               {result}
             </pre>
           </div>
@@ -831,16 +880,16 @@ function ToolCard({ tool }: { tool: ToolInfo }) {
   )
 }
 
+/* ─── Tab contents ─── */
+
 function ToolsTab({ toolsInfo }: { toolsInfo: ToolInfo[] }) {
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3 bg-violet-950/30 border border-violet-900/50 rounded-lg px-4 py-3 mb-6">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-violet-400 shrink-0">
+      <div className="flex items-center gap-3 bg-violet-950/20 border border-violet-900/40 rounded-xl px-4 py-3 mb-6">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-violet-400 shrink-0">
           <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
         </svg>
-        <p className="text-violet-300 text-sm">
-          Ces outils sont invoqués automatiquement par l'agent. Vous pouvez aussi les tester directement ci-dessous.
-        </p>
+        <p className="text-violet-300 text-sm">Ces outils sont invoqués automatiquement par l'agent. Vous pouvez aussi les tester directement ci-dessous.</p>
       </div>
       {toolsInfo.map(tool => <ToolCard key={tool.name} tool={tool} />)}
     </div>
@@ -851,14 +900,14 @@ function ConfigTab({ config, systemPrompt }: { config: AgentConfig; systemPrompt
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-gray-400 text-xs uppercase tracking-widest mb-3">config.json</h2>
-        <pre className="bg-gray-900 border border-gray-800 rounded-lg p-5 text-sm text-green-300 overflow-x-auto leading-relaxed">
+        <h2 className="text-gray-500 text-[10px] uppercase tracking-widest mb-3 font-semibold">config.json</h2>
+        <pre className="bg-gray-900 border border-gray-800 rounded-xl p-5 text-sm text-emerald-300 overflow-x-auto leading-relaxed font-mono">
           {JSON.stringify(config, null, 2)}
         </pre>
       </div>
       <div>
-        <h2 className="text-gray-400 text-xs uppercase tracking-widest mb-3">system_prompt.txt</h2>
-        <pre className="bg-gray-900 border border-gray-800 rounded-lg p-5 text-sm text-blue-200 overflow-x-auto leading-relaxed whitespace-pre-wrap">
+        <h2 className="text-gray-500 text-[10px] uppercase tracking-widest mb-3 font-semibold">system_prompt.txt</h2>
+        <pre className="bg-gray-900 border border-gray-800 rounded-xl p-5 text-sm text-blue-200 overflow-x-auto leading-relaxed whitespace-pre-wrap font-mono">
           {systemPrompt}
         </pre>
       </div>
@@ -867,7 +916,7 @@ function ConfigTab({ config, systemPrompt }: { config: AgentConfig; systemPrompt
 }
 
 function DocsTab({ docs }: { docs: string }) {
-  if (!docs) return <p className="text-gray-500">Aucune documentation disponible.</p>
+  if (!docs) return <p className="text-gray-500 text-sm">Aucune documentation disponible.</p>
   return <MarkdownResult content={docs} />
 }
 
@@ -876,37 +925,32 @@ function KnowledgeTab({ knowledge }: { knowledge: KnowledgeFile[] }) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-3 bg-amber-950/30 border border-amber-900/50 rounded-lg px-4 py-3 mb-6">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-amber-400 shrink-0">
-          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+      <div className="flex items-center gap-3 bg-amber-950/20 border border-amber-900/40 rounded-xl px-4 py-3 mb-6">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-400 shrink-0">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
         </svg>
-        <p className="text-amber-300 text-sm">
-          Ces documents sont injectés automatiquement dans le contexte de l'agent à chaque exécution.
-        </p>
+        <p className="text-amber-300 text-sm">Ces documents sont injectés automatiquement dans le contexte de l'agent à chaque exécution.</p>
       </div>
 
       {knowledge.map((file) => (
-        <div key={file.name} className="border border-gray-800 rounded-lg overflow-hidden">
+        <div key={file.name} className="border border-gray-800 rounded-xl overflow-hidden">
           <button
             onClick={() => setOpen(open === file.name ? null : file.name)}
-            className="w-full flex items-center justify-between px-4 py-3 bg-gray-900 hover:bg-gray-800 transition-colors text-left"
+            className="w-full flex items-center justify-between px-4 py-3.5 bg-gray-900/60 hover:bg-gray-900 transition-colors text-left"
           >
-            <div className="flex items-center gap-3">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-amber-400">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
+            <div className="flex items-center gap-2.5">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-400 shrink-0">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
               </svg>
               <span className="text-sm text-gray-200 font-medium">{file.name}</span>
             </div>
             <svg
-              width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-              className={`text-gray-500 transition-transform ${open === file.name ? 'rotate-180' : ''}`}
+              width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              className={`text-gray-500 transition-transform shrink-0 ${open === file.name ? 'rotate-180' : ''}`}
             >
               <polyline points="6 9 12 15 18 9"/>
             </svg>
           </button>
-
           {open === file.name && (
             <div className="border-t border-gray-800">
               <MarkdownResult content={file.content} />

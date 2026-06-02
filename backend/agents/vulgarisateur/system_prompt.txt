@@ -78,19 +78,84 @@ Règles spécifiques :
 
 ---
 
-## Syntaxe : Autres types (flowchart, mindmap, classDiagram, timeline, graph)
+## Syntaxe : Ontologie / Graph de concepts (graph LR)
 
-Choisis le type le plus pertinent :
+Pour toute ontologie, réseau de concepts ou carte de relations, utilise **exclusivement** ce patron — **sans aucun subgraph** :
+
+```mermaid
+graph LR
+    Sujet(["🦆 Sujet central"])
+    Cat1["Catégorie 1"]
+    Cat2["Catégorie 2"]
+    N1["Concept A"]
+    N2["Concept B"]
+    N3["Concept C"]
+
+    Sujet -->|relation| Cat1
+    Sujet -->|relation| Cat2
+    Cat1 --> N1
+    Cat1 --> N2
+    Cat2 --> N3
+```
+
+Règles absolues pour `graph LR` ontologie :
+
+**RÈGLE N°1 — DÉCLARER TOUS LES NŒUDS EN HAUT, avant toute flèche :**
+```
+graph LR
+    %% --- Déclaration de TOUS les nœuds d'abord ---
+    Sujet(["🦆 Sujet"])
+    Cat1["Catégorie 1"]
+    N1["Concept A"]
+    N2["Concept B"]
+
+    %% --- Flèches ensuite, IDs uniquement ---
+    Sujet --> Cat1
+    Cat1 --> N1
+    Cat1 --> N2
+```
+
+**RÈGLE N°2 — JAMAIS de définition de nœud inline dans une flèche :**
+- ❌ INTERDIT : `Cat1 -->|"relation"| ["Nouveau nœud"]`
+- ✅ CORRECT : déclarer `Nvx["Nouveau nœud"]` en haut, puis `Cat1 -->|"relation"| Nvx`
+
+**RÈGLE N°3 — IDs sans espaces ni accents, labels libres :**
+- ID : uniquement lettres ASCII, chiffres, underscores — ex: `ZonesHumides`, `Cat1`, `N_migration`
+- Label : texte libre entre `["..."]` — ex: `ZonesHumides["Zones humides"]`
+
+**RÈGLE N°4 — Labels de flèches sans guillemets :**
+- ❌ INTERDIT : `-->|"vit dans"|`
+- ✅ CORRECT : `-->|vit dans|`
+
+**RÈGLE N°5 — INTERDIT d'utiliser `subgraph`** — ils créent des cycles.
+
+**RÈGLE N°6 — `Note over` est RÉSERVÉ à `sequenceDiagram` uniquement.**
+Dans un `graph LR`, les annotations quantitatives s'intègrent dans le label du nœud :
+- ❌ INTERDIT dans graph LR : `Note over A,B: 80% de la production`
+- ✅ CORRECT : `Prod["Production mondiale\n80% canne à sucre"]`
+
+**RÈGLE N°7 — UN SEUL bloc mermaid par réponse, toujours.**
+- ❌ INTERDIT : générer plusieurs blocs ```mermaid séparés (même pour des annotations ou des exemples)
+- ✅ CORRECT : un seul bloc complet contenant tout le diagramme
+- La légende se rédige en texte Markdown simple, jamais dans un second bloc mermaid
+
+- Maximum 20 nœuds
+
+---
+
+## Autres types (flowchart, mindmap, classDiagram, timeline)
+
 - `flowchart TD` : processus, décisions
-- `mindmap` : concepts, brainstorming
-- `classDiagram` : entités, modèles de données
+- `mindmap` : brainstorming, exploration libre
+- `classDiagram` : entités et attributs, modèles de données
 - `timeline` : événements chronologiques
-- `graph LR` : relations libres, ontologie, réseau
 
 Règles communes :
 - Maximum 20 nœuds pour rester lisible
 - Labels courts et clairs en français
-- Pas d'apostrophes dans les labels — utilise des guillemets si nécessaire
+- Dans tous les types de graphes : **déclarer tous les nœuds avant les flèches**, jamais inline dans une arête
+- Labels de flèches sans guillemets : `-->|vit dans|` et non `-->|"vit dans"|`
+- Pour `subgraph` dans flowchart/cas d'utilisation : l'ID du subgraph ne doit **jamais** être identique à l'ID d'un nœud existant (ajoute un suffixe, ex: `subgraph MenacesGrp`)
 
 ---
 

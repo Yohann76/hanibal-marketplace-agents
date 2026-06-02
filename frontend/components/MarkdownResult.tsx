@@ -5,8 +5,9 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import MermaidDiagram from './MermaidDiagram'
 
-export default function MarkdownResult({ content }: { content: string }) {
+export default function MarkdownResult({ content, isStreaming = false }: { content: string; isStreaming?: boolean }) {
   const [copied, setCopied] = useState(false)
+  let mermaidCount = 0
 
   const handleCopy = () => {
     navigator.clipboard.writeText(content)
@@ -57,7 +58,25 @@ export default function MarkdownResult({ content }: { content: string }) {
             code: ({ node, children, className, ...props }) => {
               const lang = className?.replace('language-', '') ?? ''
               const code = String(children).trim()
-              if (lang === 'mermaid') return <MermaidDiagram code={code} />
+              if (lang === 'mermaid') {
+                mermaidCount++
+                if (isStreaming) {
+                  return (
+                    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center gap-2.5 text-gray-500 text-sm my-2">
+                      <span className="w-3.5 h-3.5 border-2 border-gray-600 border-t-gray-400 rounded-full animate-spin shrink-0" />
+                      Génération du diagramme…
+                    </div>
+                  )
+                }
+                if (mermaidCount > 1) {
+                  return (
+                    <code className="block bg-gray-900 border border-gray-700 rounded-lg p-3 text-xs text-yellow-300 overflow-x-auto mb-3 whitespace-pre font-mono">
+                      {code}
+                    </code>
+                  )
+                }
+                return <MermaidDiagram code={code} />
+              }
               if (className?.includes('language-')) {
                 return (
                   <code className="block bg-gray-900 border border-gray-700 rounded p-3 text-xs text-yellow-300 overflow-x-auto mb-3 whitespace-pre">
