@@ -1,0 +1,15 @@
+{
+  "id": "vulgarisateur",
+  "name": "Expert en vulgarisation",
+  "description": "Génère des diagrammes visuels Mermaid : cas d'utilisation UML, diagrammes de séquence, mind maps, flowcharts, ontologies et bien plus.",
+  "type": "analyse",
+  "provider": "mistral",
+  "input": {
+    "type": "text",
+    "label": "Décrivez ce que vous souhaitez visualiser",
+    "placeholder": "Ex: Diagramme de cas d'utilisation — app de réservation avec clients et gérants | Diagramme de séquence — connexion avec authentification 2FA | Ontologie — cycle de vie d'un projet agile | Mind map — architecture d'un système e-commerce..."
+  },
+  "output": {
+    "type": "mermaid"
+  }
+}

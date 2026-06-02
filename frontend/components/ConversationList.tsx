@@ -18,9 +18,7 @@ const AGENT_ICONS: Record<string, string> = {
   'meeting-summary': '🤖',
   'email-summary': '🤖',
   'seo-analysis': '🤖',
-  'ontology-schema': '🤖',
-  'use-case-diagram': '🤖',
-  'sequence-diagram': '🤖',
+  'vulgarisateur': '🤖',
   'prospection': '🤖',
 }
 

@@ -1,6 +1,6 @@
 {
   "id": "seo-analysis",
-  "name": "Analyse SEO",
+  "name": "Expert SEO",
   "description": "Analyse la page web fournie et génère un rapport SEO complet avec recommandations.",
   "type": "analyse",
   "provider": "mistral",
