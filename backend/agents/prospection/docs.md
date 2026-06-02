@@ -1,4 +1,4 @@
-# Prospection
+# Chargé de prospection
 
 ## Description
 Cet agent interroge l'**Annuaire des Entreprises français** (données SIRENE via data.gouv.fr) pour identifier des entreprises cibles, leurs dirigeants, et génère une fiche de prospection commerciale structurée avec une stratégie d'approche.

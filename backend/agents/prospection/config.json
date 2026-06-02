@@ -1,6 +1,6 @@
 {
   "id": "prospection",
-  "name": "Prospection",
+  "name": "Chargé de prospection",
   "description": "Recherche des entreprises françaises (SIRENE), trouve les contacts (email, téléphone, site) et génère des fiches de prospection concises.",
   "type": "analyse",
   "provider": "mistral",
