@@ -15,8 +15,7 @@ interface ConversationSession {
 }
 
 const AGENT_ICONS: Record<string, string> = {
-  'meeting-summary': '🤖',
-  'email-summary': '🤖',
+  'assistant-gestion': '🤖',
   'seo-analysis': '🤖',
   'vulgarisateur': '🤖',
   'prospection': '🤖',

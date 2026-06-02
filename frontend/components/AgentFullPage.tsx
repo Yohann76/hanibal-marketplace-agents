@@ -432,17 +432,19 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
     setError(null)
   }
 
-  const isText = config.input.type === 'text' || config.input.type === 'prospection'
+  const isText = config.input.type === 'text' || config.input.type === 'prospection' || config.input.type === 'gestion'
 
   const isReady = () => {
     if (config.input.type === 'gmail') return !!gmailSession
     if (config.input.type === 'url') return urlInput.trim() !== ''
+    if (config.input.type === 'gestion') return !!gmailSession || textInput.trim() !== ''
     return textInput.trim() !== ''
   }
 
   const getDisplayInput = () => {
     if (config.input.type === 'url') return urlInput
     if (config.input.type === 'gmail') return '(Gmail — emails du jour)'
+    if (config.input.type === 'gestion') return gmailSession ? '(Gmail — emails du jour)' : textInput
     return textInput
   }
 
@@ -450,6 +452,7 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
     const base = { session_id: activeSessionId }
     if (config.input.type === 'gmail') return { ...base, session: gmailSession }
     if (config.input.type === 'url') return { ...base, input: urlInput }
+    if (config.input.type === 'gestion') return gmailSession ? { ...base, session: gmailSession } : { ...base, input: textInput }
     return { ...base, input: textInput }
   }
 
@@ -669,7 +672,7 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
         {/* Input */}
         <div className="shrink-0 px-8 pb-6 pt-3 border-t border-gray-800">
           <div className="border border-gray-800 rounded-xl bg-gray-900 p-3 space-y-3">
-            {config.input.type === 'gmail' && (
+            {(config.input.type === 'gmail' || config.input.type === 'gestion') && (
               <GmailButton session={gmailSession} onConnect={s => setGmailSession(s || null)} />
             )}
             {config.input.type === 'url' && (

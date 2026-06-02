@@ -109,6 +109,15 @@ async def _resolve_input(agent_id: str, body: RunRequest) -> str:
         except Exception as e:
             logger.error("SEO error: %s\n%s", e, traceback.format_exc())
             raise HTTPException(500, f"Cannot access URL: {e}")
+    elif input_type == "gestion":
+        if body.session:
+            try:
+                return await gmail_service.fetch_emails(body.session)
+            except ValueError as e:
+                raise HTTPException(422, str(e))
+        if not body.input:
+            raise HTTPException(422, "Collez une transcription ou connectez Gmail")
+        return body.input
     elif input_type == "prospection":
         if not body.input:
             raise HTTPException(422, "Please describe your prospection target")
