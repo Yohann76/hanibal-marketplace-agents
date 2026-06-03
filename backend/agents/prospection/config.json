@@ -4,7 +4,7 @@
   "description": "Recherche des entreprises françaises (SIRENE), trouve les contacts (email, téléphone, site) et génère des fiches de prospection concises.",
   "type": "analyse",
   "provider": "mistral",
-  "tools": ["search_french_companies", "find_company_contacts", "web_search"],
+  "tools": ["search_french_companies", "find_company_contacts", "web_search", "mcp_datagouv", "bodacc_search", "linkedin_search"],
   "input": {
     "type": "text",
     "label": "Décrivez votre cible",
