@@ -4,20 +4,19 @@
 
 - add user account 
 - add memory per user account 
-- add configuration (prompt system, right...) per user account 
+- add super configuration (prompt system, right...) per user account 
+- add usage per user account (and limit)
 
-Right for each agent (coched case, see email, send email, search internet...)(per user)
+- Right for each agent (coched case, see email, send email, search internet...)(per user)
 
 # Explore
 
-- Auth google gmail for access (summary, send email..)
-- Tools in each agents (google-gmail in seo-performance)
+- Auth google with different tools (calendar etc...)
 - See Qwen with API KEY
 - Obsidian for database restructured (and create fiche?)
+- Local LLM with docker for select provider (mistral api, or local model LLM)
 
-# Deploy with HTTPS (Ansible)
 
-- add DNS Zone for domains (obtains HTTPS for agent google)
 
 
 
