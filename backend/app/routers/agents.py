@@ -1,4 +1,5 @@
 import asyncio
+import importlib.util
 import json
 import logging
 import traceback
@@ -10,7 +11,6 @@ from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 from app.services import agent_runner, seo_service, gmail_service, prospection_service
-from app.services.tools import get_tools_info
 from app.database import save_execution, upsert_conversation_session
 from app.config import (
     BACKEND_PUBLIC_URL,
@@ -21,6 +21,46 @@ from app.config import (
 
 router = APIRouter()
 AGENTS_DIR = Path("agents")
+
+
+def _load_agent_tools_info(agent_id: str) -> list[dict]:
+    """Load tools META from the agent's own tools/ subfolder."""
+    tools_dir = AGENTS_DIR / agent_id / "tools"
+    if not tools_dir.exists():
+        return []
+    result = []
+    for path in sorted(tools_dir.glob("*.py")):
+        if path.name.startswith("_"):
+            continue
+        spec = importlib.util.spec_from_file_location(f"agent_{agent_id}_{path.stem}", path)
+        mod = importlib.util.module_from_spec(spec)
+        try:
+            spec.loader.exec_module(mod)
+        except Exception:
+            continue
+        if hasattr(mod, "META"):
+            result.append(mod.META)
+    return result
+
+
+def _find_tool_in_agents(tool_name: str):
+    """Find a tool function by scanning all agents' tools/ subfolders."""
+    for agent_dir in sorted(AGENTS_DIR.iterdir()):
+        if not agent_dir.is_dir():
+            continue
+        path = agent_dir / "tools" / f"{tool_name}.py"
+        if not path.exists():
+            continue
+        spec = importlib.util.spec_from_file_location(f"find_tool_{tool_name}", path)
+        mod = importlib.util.module_from_spec(spec)
+        try:
+            spec.loader.exec_module(mod)
+        except Exception:
+            continue
+        fn = getattr(mod, tool_name, None)
+        if fn and hasattr(fn, "invoke"):
+            return fn
+    return None
 
 
 def load_agents() -> list[dict]:
@@ -71,7 +111,7 @@ def load_agent_detail(agent_id: str) -> dict:
         "system_prompt": system_prompt,
         "docs": docs,
         "knowledge": knowledge,
-        "tools_info": get_tools_info(config.get("tools", [])),
+        "tools_info": _load_agent_tools_info(agent_id),
     }
 
 
@@ -195,8 +235,7 @@ class ToolRunRequest(BaseModel):
 
 @router.post("/tools/{tool_name}/run")
 async def run_tool(tool_name: str, body: ToolRunRequest):
-    from app.services.tools import TOOLS_REGISTRY
-    tool = TOOLS_REGISTRY.get(tool_name)
+    tool = _find_tool_in_agents(tool_name)
     if not tool:
         raise HTTPException(404, f"Tool '{tool_name}' not found")
     try:

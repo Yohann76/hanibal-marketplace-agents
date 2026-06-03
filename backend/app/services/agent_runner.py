@@ -1,3 +1,4 @@
+import importlib.util
 import json
 import uuid
 import asyncio
@@ -14,7 +15,6 @@ from app.config import (
     CLAUDE_COST_INPUT_PER_M, CLAUDE_COST_OUTPUT_PER_M,
 )
 from app.database import engine
-from app.services.tools import get_tools
 
 AGENTS_DIR = Path(__file__).parent.parent.parent / "agents"
 
@@ -60,6 +60,28 @@ def get_model_name(provider: str) -> str:
 
 
 # ── Agent config helpers ──────────────────────────────────────────────────────
+
+def load_agent_tools(agent_id: str) -> tuple[list, dict]:
+    """Load tools from the agent's own tools/ subfolder."""
+    tools_dir = AGENTS_DIR / agent_id / "tools"
+    if not tools_dir.exists():
+        return [], {}
+    tools, tools_dict = [], {}
+    for path in sorted(tools_dir.glob("*.py")):
+        if path.name.startswith("_"):
+            continue
+        spec = importlib.util.spec_from_file_location(f"agent_{agent_id}_{path.stem}", path)
+        mod = importlib.util.module_from_spec(spec)
+        try:
+            spec.loader.exec_module(mod)
+        except Exception:
+            continue
+        fn = getattr(mod, path.stem, None)
+        if fn and hasattr(fn, "invoke"):
+            tools.append(fn)
+            tools_dict[fn.name] = fn
+    return tools, tools_dict
+
 
 def load_agent_config(agent_id: str) -> dict:
     return json.loads((AGENTS_DIR / agent_id / "config.json").read_text())
@@ -291,8 +313,7 @@ async def stream_agent(
     messages = [SystemMessage(content=full_prompt)] + history + [HumanMessage(content=user_input)]
 
     if tool_names:
-        tools      = get_tools(tool_names)
-        tools_dict = {t.name: t for t in tools}
+        tools, tools_dict = load_agent_tools(agent_id)
 
         if provider == "claude":
             # ── Claude tool loop via LangChain (no tool_call_id bug) ──────────
