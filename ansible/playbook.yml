@@ -155,13 +155,11 @@
     # ── 8. Docker Compose ─────────────────────────────────────────────────────
 
     - name: Lancer docker compose (build + up)
-      become_user: "{{ app_user }}"
-      community.docker.docker_compose_v2:
-        project_src: "{{ app_dir }}"
-        build: always
-        state: present
-      environment:
-        PATH: "/usr/local/bin:/usr/bin:/bin"
+      shell: |
+        cd {{ app_dir }}
+        docker compose up -d --build
+      args:
+        executable: /bin/bash
 
     # ── 9. Renouvellement automatique SSL ─────────────────────────────────────
 

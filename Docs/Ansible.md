@@ -47,12 +47,6 @@ sudo apt install -y ansible ansible-galaxy collection install community.docker
 ansible-playbook ansible/playbook.yml -i ansible/inventory.ini --ask-vault-pass -K
 ```
 
-### Redéployer après un changement de code
-```bash
-ansible-playbook ansible/playbook.yml -i ansible/inventory.ini --ask-vault-pass -K 
-```
-
-
 ## Renouvellement SSL
 
 Certbot est configuré automatiquement via cron pour renouveler le certificat Let's Encrypt deux fois par jour (à 3h et 15h). Aucune intervention manuelle nécessaire.
