@@ -1,0 +1,397 @@
+# =============================================================================
+# OBJET COGNITIF — Calibre OC (Objet Cognitif complet)  ·  OCF v1.0.0
+# Format de référence · 7 couches · 132 champs obligatoires
+# Validateur : oc validate --calibre oc ./fichier.oc.yaml
+# Référence   : https://schema.ocf.org/v1.0.0
+# =============================================================================
+
+_ocf:
+  version: "1.0.0"                          # Version du format OCF [OBL]
+  calibre: oc                               # nano | oc | macro [OBL]
+  schema: "https://schema.ocf.org/v1.0.0"
+
+
+# =============================================================================
+# C1 · IDENTITÉ & CADRAGE
+# Qui suis-je ? À qui appartiens-je ? Quel est mon contrat ?
+# =============================================================================
+
+name: "oc_nom"                              # snake_case, unique dans namespace [OBL]
+namespace: "org.domaine"                    # Fully Qualified Name [OBL]
+title: "Titre lisible de l'OC"             # [OBL]
+description: |                             # Périmètre et intention [OBL]
+  Ce que fait l'OC, pour qui, dans quel contexte.
+  Ce qu'il ne fait PAS.
+version: "1.0.0"                            # SemVer [OBL]
+status: experimental                        # experimental | active | deprecated | archived [OBL]
+risk_level: limited                         # minimal | limited | high | critical [OBL]
+tags:                                       # Mots-clés libres [OBL — min. 1]
+  - "domaine"
+  - "cas_usage"
+
+ownership:
+  owner: "owner@organisation.fr"            # Responsable métier [OBL]
+  accountable: "accountable@organisation.fr" # Redevable final [OBL]
+  steward: "steward@organisation.fr"        # Gardien de la qualité [OPT]
+  domain: "nom_du_domaine"                  # Domaine organisationnel [OBL]
+
+scope:
+  geographic: "EU"                          # Périmètre géographique [OPT]
+  organizational: "BU / Service"            # Périmètre organisationnel [OPT]
+  temporal: "2026-2027"                     # Période de validité [OPT]
+  out_of_scope:                             # Ce que l'OC NE fait PAS [OPT]
+    - "Décisions hors périmètre"
+
+created_at: "2026-01-15T09:00:00Z"          # ISO 8601 datetime [OBL]
+updated_at: "2026-01-15T09:00:00Z"          # ISO 8601 datetime [OBL]
+review_due: "2026-07-15"                    # ISO 8601 date [OBL]
+
+mandate:                                    # Contrat agentique — le cœur de C1 [OBL]
+  allowed:
+    - "analyser [objet] depuis [source]"
+    - "extraire [élément] pour [destinataire]"
+    - "synthétiser [contenu] en respectant [contrainte]"
+  forbidden:
+    - "diffuser sans validation humaine"
+    - "reformuler pour adoucir"
+    - "inventer une information absente"
+    - "attribuer sans preuve"
+  human_validation:
+    required: true                          # [OBL]
+    by: "owner"                             # owner | accountable | designated [OBL]
+    max_delay: "PT48H"                      # ISO 8601 duration [OBL]
+    escalation: "n+1@organisation.fr"       # Si délai dépassé [OPT]
+
+
+# =============================================================================
+# C2 · PERCEPTION & CONTEXTE
+# De quoi ai-je besoin pour fonctionner ? Quelles données puis-je toucher ?
+# =============================================================================
+
+inputs:
+  - id: "input_principal"                   # Identifiant unique [OBL]
+    label: "Nom lisible de l'entrée"        # [OBL]
+    type: text                              # text | number | boolean | date | file | structured | list [OBL]
+    required: true                          # [OBL]
+    format: "string"                        # Format attendu [OPT]
+    source: "user_input"                    # user_input | database | api | file | oc_output [OPT]
+    validation_rule: "non_empty"            # Règle de validation [OPT]
+    pii: false                              # Contient des données personnelles [OBL]
+    description: "Description de l'entrée" # [OPT]
+  # Ajouter d'autres inputs si nécessaire
+
+context:
+  domain: "nom_du_domaine"                  # Domaine métier [OBL]
+  use_case: "description_cas_usage"         # Cas d'usage précis [OBL]
+  target_audience:                          # Audiences cibles [OBL]
+    - "role_utilisateur"
+  language: "fr-FR"                         # BCP 47 [OBL]
+  organizational_unit: "Direction X"        # Unité organisationnelle [OPT]
+  constraints:                              # Contraintes contextuelles [OPT]
+    - "Sources : SI interne uniquement"
+    - "Langue : français obligatoire"
+
+data_governance:
+  data_classification: internal             # public | internal | confidential | restricted [OBL]
+  retention_policy: "P2Y"                   # ISO 8601 duration [OBL]
+  anonymization_required: false             # [OBL]
+  consent_required: false                   # [OBL]
+  legal_basis: "not_applicable"             # consent | contract | legal_obligation | legitimate_interest [OPT]
+
+input_validation:
+  mode: strict                              # strict | lenient | none [OBL]
+  schema_check: true                        # [OBL]
+  required_check: true                      # [OBL]
+
+
+# =============================================================================
+# C3 · RAISONNEMENT
+# Comment est-ce que je pense ? Quel pattern cognitif j'utilise ?
+# Que fais-je si j'échoue ?
+# =============================================================================
+
+reasoning:
+  pattern: chain_of_thought                 # chain_of_thought | react | plan_execute | reflection | tree_of_thought [OBL]
+  cognitive_pattern: problem_decomposition  # problem_decomposition | multi_perspective | synthesis | critique | analogical [OBL]
+  strategy: |                               # Description complète de la stratégie [OBL]
+    Étape 1 : [Description]
+    Étape 2 : [Description]
+    Étape 3 : [Description]
+
+  decision_logic:                           # Règles de décision formalisées [OBL — min. 1]
+    - id: "dl_regle_1"
+      rule: "Si [condition] alors [action]" # En langage naturel [OBL]
+      condition: "champ > seuil"            # Condition formelle [OBL]
+      action: "action_declenchee"           # Action déclenchée [OBL]
+
+  success_criteria:                         # Conditions de succès [OBL]
+    - "Tous les champs obligatoires remplis"
+    - "Score de confiance ≥ 0.75"
+
+  failure_conditions:                       # Conditions d'échec [OBL]
+    - "Données d'entrée insuffisantes"
+    - "Dépendance indisponible"
+    - "Qualité transcript insuffisante"
+
+  on_failure: escalate_to_human             # retry | fallback | escalate_to_human | abort [OBL]
+
+  explainability:
+    method: natural_language                # shap | lime | attention | rule_extraction | natural_language [OBL]
+    level: detailed                         # none | summary | detailed | full [OBL]
+    included_in_output: true                # [OBL]
+
+  audit:
+    reasoning_logged: true                  # [OBL]
+    decision_points_captured: true          # [OBL]
+
+  llm:
+    model: "claude-sonnet-4-6"              # Modèle LLM utilisé [OBL]
+    temperature: 0.3                        # 0.0–2.0 [OBL]
+    max_tokens: 4096                        # [OPT]
+    system_prompt_ref: null                 # URI vers le system prompt [OPT]
+
+
+# =============================================================================
+# C4 · GARDE-FOUS
+# Qu'est-ce que je ne ferai JAMAIS ? Qui peut m'arrêter ?
+# Quel humain est dans la boucle ?
+# =============================================================================
+
+safeguards:
+  autonomy:
+    tier: supervised                        # full_auto | monitored | supervised | approval_required [OBL]
+
+  non_negotiable:                           # Ces règles NE PEUVENT JAMAIS être désactivées [OBL — min. 1]
+    - id: "GF-01"
+      rule: "INTERDIT de [action critique 1]"
+      trigger: "[condition de déclenchement]"
+      consequence: block                    # block | alert | log [OBL]
+      examples:
+        bad: "Exemple de violation"
+        good: "Exemple conforme"
+    - id: "GF-02"
+      rule: "INTERDIT de [action critique 2]"
+      trigger: "[condition]"
+      consequence: block
+
+  human_in_the_loop:
+    required: true                          # [OBL]
+    checkpoints:                            # Points de contrôle humain [OBL — min. 1]
+      - "Avant toute diffusion de sortie"
+      - "Si alerte de sensibilité détectée"
+    escalation:
+      max_delay: "PT48H"                    # [OBL]
+      contact: "owner@organisation.fr"      # [OBL]
+      fallback: "n+1@organisation.fr"       # [OPT]
+
+  data_protection:
+    pii_scan: true                          # Scanner les PII en entrée [OBL]
+    pii_action: mask                        # mask | refuse | alert [OBL]
+    dpo_contact: "dpo@organisation.fr"      # [OBL si pii_scan: true]
+
+  security:
+    injection_check: true                   # [OBL]
+    jailbreak_check: true                   # [OBL]
+    output_sanitize: true                   # [OBL]
+
+  alerts:                                   # Alertes à déclencher [OPT]
+    - id: "ALT-01"
+      condition: "données juridiquement sensibles détectées"
+      severity: critical                    # info | warning | critical [OBL]
+      notify: ["conformite@org.fr"]
+    - id: "ALT-02"
+      condition: "3+ actions sans responsable désigné"
+      severity: warning
+      notify: ["owner@organisation.fr"]
+
+  audit:
+    every_decision: true                    # [OBL]
+    format: structured                      # structured | text [OBL]
+    retention: "P2Y"                        # [OBL]
+
+
+# =============================================================================
+# C5 · SORTIES & LIVRABLES
+# Que produis-je exactement ? Comment mes sorties sont-elles tracées ?
+# Pour qui est chaque livrable ?
+# =============================================================================
+
+outputs:
+  - id: "livrable_principal"                # Identifiant unique [OBL]
+    label: "Nom du livrable principal"      # [OBL]
+    type: markdown                          # text | json | yaml | markdown | structured [OBL]
+    audience:                               # Destinataires [OBL]
+      - "manager"
+      - "expert_metier"
+    quality_criteria: "Scannable en 2 min, ≤ 800 mots" # [OBL]
+    traceability:
+      timestamped: true                     # [OBL]
+      hash_input: true                      # Hash SHA-256 de l'input [OBL]
+      hash_output: true                     # Hash SHA-256 de la sortie [OBL]
+      source_cited: true                    # Chaque affirmation a une source [OBL]
+    retention: "P2Y"                        # ISO 8601 duration [OBL]
+
+  - id: "livrable_machine"                  # Export machine pour traitement aval [OPT]
+    label: "Export structuré"
+    type: json
+    audience:
+      - "oc_suivant"
+      - "data_system"
+    traceability:
+      timestamped: true
+      hash_output: true
+    retention: "P2Y"
+
+  - id: "log_execution"                     # Log d'exécution — obligatoire [OBL]
+    label: "Journal d'exécution"
+    type: json
+    audience:
+      - "auditor"
+    traceability:
+      timestamped: true
+      hash_output: true
+    retention: "P5Y"                        # Rétention longue pour audit [OBL]
+
+
+# =============================================================================
+# C6 · COMPOSITION & INTÉGRATION
+# Avec qui est-ce que je travaille ? Qui est responsable de chaque intégration ?
+# =============================================================================
+
+composition:
+  role: autonomous                          # orchestrator | worker | autonomous | hybrid [OBL]
+  integration_owner: "arch@organisation.fr" # [OBL]
+
+  praxemes:                                 # Praxèmes (Nano) mobilisés par cet OC [OPT]
+    - id: "org.domaine.praxeme_1"           # FQN du praxème [OBL]
+      version: ">=1.0.0"                    # SemVer range [OBL]
+
+  dependencies:                             # Dépendances externes [OPT]
+    - id: "org.data.source_1"               # FQN [OBL]
+      type: data_product                    # oc | agent | data_product | external_service | llm [OBL]
+      version_constraint: ">=1.0.0"         # SemVer range [OBL]
+      protocol: mcp                         # mcp | rest | graphql | grpc | batch [OBL]
+      interface: input                      # input | output | bidirectional [OBL]
+      coupling: loose                       # tight | loose [OBL]
+      owner: "owner@organisation.fr"        # [OBL]
+
+  feeds_into:                               # OC suivants dans la chaîne [OPT]
+    - id: "org.domaine.oc_suivant"
+      version: ">=1.0.0"
+      on_event: "output_produced"
+
+  topology:
+    pattern: linear                         # linear | fan_out | fan_in | dag | peer_to_peer [OPT]
+    execution_mode: sequential              # sequential | parallel | event_driven | hybrid [OPT]
+
+  resilience:
+    circuit_breaker: true                   # [OBL]
+    timeout: "PT30S"                        # ISO 8601 duration [OBL]
+    fallback_behavior: "Mode dégradé : description"  # [OBL]
+    retry:
+      max_attempts: 3                       # [OPT]
+      backoff: exponential                  # exponential | linear | fixed [OPT]
+
+  third_parties:                            # Tiers qui traitent des données [OBL si présents]
+    - name: "Anthropic"
+      processing_purpose: "LLM inference"
+      data_categories: ["anonymized_content"]
+      storage_location: "US"
+      transfer_mechanism: sccs              # sccs | bcrs | adequacy_decision [OBL]
+      dpa_ref: "https://legal.org.fr/dpa/anthropic-2026.pdf"
+
+
+# =============================================================================
+# C7 · GOUVERNANCE & CYCLE DE VIE
+# Quand serai-je obsolète ? Qui me maintient ? Comment est-ce que j'évolue ?
+# Comment suis-je évalué ?
+# =============================================================================
+
+lifecycle:
+  status: experimental                      # experimental | active | deprecated | archived [OBL]
+  maturity: draft                           # draft | validated | certified | standard [OBL]
+
+  maintainer:
+    name: "Prénom NOM"                      # [OBL]
+    email: "maintainer@organisation.fr"     # [OBL]
+    team: "AI Governance"                   # [OPT]
+
+  dates:
+    deployed_at: "2026-01-15"               # ISO 8601 [OBL]
+    last_reviewed_at: "2026-01-15"          # ISO 8601 [OBL]
+    review_due: "2026-07-15"                # Source de vérité [OBL]
+    review_interval: "P6M"                  # ISO 8601 duration [OBL]
+
+  # ── KPIs de performance — l'angle mort résolu ───────────────────────────────
+  kpis:                                     # [OBL — min. 2]
+    - id: "kpi_completeness"
+      name: "Complétude des sorties"
+      target: 0.85                          # 0.0–1.0
+      method: "sections_remplies / total"
+      measurement_frequency: per_execution  # per_execution | daily | weekly [OBL]
+    - id: "kpi_human_approval"
+      name: "Taux de validation premier passage"
+      target: 0.65
+      method: "approbations_directes / total_soumis"
+      measurement_frequency: weekly
+    - id: "kpi_production_time"
+      name: "Temps de production"
+      target: 120                           # Secondes
+      method: "chrono de start à sortie livrée"
+      measurement_frequency: per_execution
+
+  anomaly_detection:                        # Détection d'anomalies [OBL]
+    rules:
+      - id: "anom_01"
+        condition: "0 decisions sur transcript > 1000 mots"
+        action: "re-verify reasoning step"
+      - id: "anom_02"
+        condition: "80%+ actions sur 1 seul responsable"
+        action: "flag for human review"
+
+  changelog:
+    - version: "1.0.0"
+      date: "2026-01-15"
+      type: major                           # breaking | major | minor | patch | security | compliance [OBL]
+      summary: "Version initiale"           # [OBL]
+      approved_by: "cto@organisation.fr"    # [OPT]
+
+  monitoring:
+    frequency: monthly                      # continuous | daily | weekly | monthly | quarterly [OBL]
+    drift_threshold: 0.15                   # 0.0–1.0 [OPT]
+    incident_contact: null                  # [OBL si EU AI Act high risk]
+
+  output_retention:
+    default_period: "P2Y"                   # ISO 8601 duration [OBL]
+    legal_hold_period: "P10Y"               # [OPT]
+    deletion_mechanism: automatic_purge     # automatic_purge | manual_review | legal_hold [OBL]
+
+  provenance:
+    design_context: |                       # [OBL]
+      Contexte dans lequel cet OC a été conçu.
+      Projet, décision organisationnelle, contrainte réglementaire.
+    known_limitations:                      # [OBL]
+      - "Non validé pour [secteur / contexte]"
+    valid_domains:                          # [OPT]
+      - "domaine_1"
+    assumptions:                            # [OPT]
+      - "Les données sources sont à jour"
+
+  compliance:
+    eu_ai_act:
+      risk_category: limited                # minimal | limited | high | unacceptable [OBL]
+      art9_risk_management: true            # Gestion du risque documentée [OBL si high]
+      art12_logging: true                   # Journalisation obligatoire [OBL]
+      art13_transparency: true              # Transparence utilisateur [OBL]
+      art14_human_oversight: true           # Supervision humaine [OBL]
+      last_conformity_assessment: null      # ISO 8601 [OBL si high risk]
+    substantial_change_threshold: medium    # low | medium | high [OPT]
+
+  catalog:
+    keywords:                               # [OBL]
+      - "domaine"
+      - "cas_usage"
+    themes:                                 # [OBL]
+      - "theme_principal"
+    maturity_score: bronze                  # bronze | silver | gold [OPT]
+    landing_page: null                      # URI de documentation [OPT]

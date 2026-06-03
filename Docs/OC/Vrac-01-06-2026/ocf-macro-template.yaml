@@ -1,0 +1,222 @@
+# =============================================================================
+# OBJET COGNITIF — Calibre MACRO (Constellation)  ·  OCF v1.0.0
+# Orchestration de plusieurs OC. La couche C6 est le cœur.
+# La Macro pense AVEC ses OC, pas à leur place.
+# Validateur : oc validate --calibre macro ./fichier.oc.yaml
+# Référence   : https://schema.ocf.org/v1.0.0/macro
+# =============================================================================
+
+_ocf:
+  version: "1.0.0"                          # Version du format OCF [OBL]
+  calibre: macro                            # nano | oc | macro [OBL]
+  schema: "https://schema.ocf.org/v1.0.0/macro"
+
+
+# =============================================================================
+# C1 · IDENTITÉ COLLECTIVE
+# Qui est ce cabinet ? Quelle est sa raison d'être commune ?
+# =============================================================================
+
+name: "constellation_nom"                   # snake_case [OBL]
+namespace: "org.domaine"                    # FQN [OBL]
+title: "Titre de la constellation"          # [OBL]
+description: |                             # Mission collective [OBL]
+  Ce que cette constellation accomplit, quels OC elle orchestre,
+  pour quelle finalité organisationnelle.
+version: "1.0.0"                            # SemVer [OBL]
+status: experimental                        # experimental | active | deprecated | archived [OBL]
+risk_level: limited                         # Risque agrégé de la constellation [OBL]
+
+ownership:
+  owner: "architect@organisation.fr"        # Architecte de la constellation [OBL]
+  accountable: "sponsor@organisation.fr"    # Sponsor décisionnel [OBL]
+  domain: "nom_du_domaine"                  # [OBL]
+
+created_at: "2026-01-15T09:00:00Z"          # [OBL]
+updated_at: "2026-01-15T09:00:00Z"          # [OBL]
+review_due: "2026-07-15"                    # [OBL]
+
+
+# =============================================================================
+# C2 · PERCEPTION & CONTEXTE (entrée de la constellation)
+# Quels sont les déclencheurs de l'orchestration ?
+# =============================================================================
+
+trigger:                                    # Ce qui déclenche la constellation [OBL]
+  type: event                              # event | schedule | api_call | human_request [OBL]
+  description: "Description du déclencheur"
+
+context:
+  domain: "nom_du_domaine"                  # [OBL]
+  use_case: "description_cas_usage_constellation" # [OBL]
+  language: "fr-FR"                         # [OBL]
+
+
+# =============================================================================
+# C3 · RAISONNEMENT MACRO (allégé)
+# La Macro décide QUI pense pour elle, pas COMMENT.
+# Le raisonnement détaillé vit dans chaque OC membre.
+# =============================================================================
+
+reasoning:
+  delegation_policy: |                      # Comment la Macro décide de déléguer [OBL]
+    OC-1 reçoit le trigger et produit la sortie A.
+    OC-2 reçoit A et produit la sortie B.
+    OC-3 valide A+B avant diffusion.
+  on_failure: escalate_to_human             # [OBL]
+
+
+# =============================================================================
+# C4 · GARDE-FOUS TRANSVERSAUX
+# Ces règles s'appliquent à TOUS les OC orchestrés.
+# Elles dominent les garde-fous individuels en cas de conflit.
+# =============================================================================
+
+safeguards:
+  autonomy:
+    tier: supervised                        # Niveau minimal appliqué à toute la constellation [OBL]
+
+  transverse_non_negotiable:                # Règles héritées par tous les membres [OBL — min. 1]
+    - id: "GFT-01"
+      rule: "Aucune sortie diffusée sans validation humaine finale"
+      priority: absolute                    # absolute | high | normal [OBL]
+      consequence: block
+    - id: "GFT-02"
+      rule: "Toutes les données PII masquées avant transit inter-OC"
+      priority: absolute
+      consequence: block
+    - id: "GFT-03"
+      rule: "La trace de bout-en-bout est obligatoire pour chaque exécution"
+      priority: absolute
+      consequence: block
+
+  inheritance_policy:
+    guard_rails_inherited: true             # Les membres héritent des GFT [OBL]
+    override_allowed: false                 # Un membre peut-il affaiblir un GFT ? Non. [OBL]
+
+  human_in_the_loop:
+    required: true                          # [OBL]
+    final_checkpoint: "OC validateur final" # Quel OC porte le checkpoint humain [OBL]
+    escalation_contact: "sponsor@organisation.fr" # [OBL]
+
+
+# =============================================================================
+# C5 · SORTIES FINALES DE LA CONSTELLATION
+# Ce que la constellation produit en sortie de chaîne.
+# =============================================================================
+
+outputs:
+  - id: "sortie_finale_constellation"
+    label: "Livrable agrégé de la constellation"
+    type: markdown                          # [OBL]
+    produced_by: "org.domaine.oc_validateur" # OC qui produit cette sortie [OBL]
+    audience:
+      - "sponsor"
+      - "manager"
+    traceability:
+      end_to_end_trace: true               # Trace de bout-en-bout [OBL]
+      member_hashes_included: true         # Hash des sorties de chaque membre [OBL]
+
+
+# =============================================================================
+# C6 · ORCHESTRATION — CŒUR DU CALIBRE MACRO
+# Avec qui est-ce que je travaille ? Dans quel ordre ? Que faire en cas de conflit ?
+# =============================================================================
+
+orchestration:
+  pattern: dag                              # linear | fan_out | fan_in | dag | pipeline [OBL]
+  execution_mode: sequential                # sequential | parallel | event_driven | hybrid [OBL]
+
+  conflict_resolution:                      # Que faire si deux OC se contredisent [OBL]
+    strategy: escalate_to_human            # vote | arbiter_oc | escalate_to_human | priority [OBL]
+    arbiter_oc: null                        # OC arbitre si strategy=arbiter_oc [OPT]
+    timeout_before_escalation: "PT1H"       # [OPT]
+
+  members:                                  # OC membres orchestrés [OBL — min. 2]
+    - id: "org.domaine.oc_1"               # FQN [OBL]
+      version: ">=1.0.0"                   # SemVer range [OBL]
+      role: worker                          # orchestrator | worker | validator [OBL]
+      order: 1                              # Ordre d'exécution [OBL]
+      input_from: []                        # OC dont ce membre consomme la sortie [OBL]
+      description: "Première étape de traitement"
+    - id: "org.domaine.oc_2"
+      version: ">=1.0.0"
+      role: worker
+      order: 2
+      input_from: ["org.domaine.oc_1"]
+      description: "Deuxième étape de traitement"
+    - id: "org.domaine.oc_validateur"
+      version: ">=1.0.0"
+      role: validator                       # Ce membre porte la validation humaine finale
+      order: 3
+      input_from: ["org.domaine.oc_1", "org.domaine.oc_2"]
+      description: "Validation et assemblage final"
+
+  data_flow:                                # Comment les données circulent entre membres [OPT]
+    format: json                            # Format des données inter-OC [OBL]
+    schema_ref: null                        # URI du schéma de transit [OPT]
+
+  inheritance:                              # Politique d'héritage pour les membres [OBL]
+    safeguards: true                        # Les GFT sont hérités [OBL]
+    kpis_aggregated: true                   # KPIs agrégés au niveau constellation [OBL]
+    unified_trace: true                     # Une seule trace de bout-en-bout [OBL]
+
+  resilience:
+    global_timeout: "PT5M"                  # Timeout de toute la constellation [OBL]
+    fallback_mode: |                        # Mode dégradé si la constellation échoue [OBL]
+      Description du comportement de repli.
+      Ex : alerter l'humain et suspendre.
+    member_failure_policy: pause_and_alert  # pause_and_alert | skip_and_continue | abort [OBL]
+
+
+# =============================================================================
+# C7 · GOUVERNANCE COLLECTIVE & CYCLE DE VIE
+# =============================================================================
+
+lifecycle:
+  status: experimental                      # [OBL]
+  maturity: draft                           # draft | validated | certified | standard [OBL]
+
+  maintainer:
+    name: "Architecte de la constellation"  # [OBL]
+    email: "architect@organisation.fr"      # [OBL]
+    team: "AI Governance"                   # [OPT]
+
+  dates:
+    deployed_at: "2026-01-15"               # [OBL]
+    last_reviewed_at: "2026-01-15"          # [OBL]
+    review_due: "2026-07-15"                # [OBL]
+    review_interval: "P6M"                  # [OBL]
+
+  kpis_aggregated:                          # KPIs agrégés sur toute la constellation [OBL]
+    - id: "kpi_end_to_end_completion"
+      name: "Taux de complétion bout-en-bout"
+      target: 0.90
+      measurement_frequency: weekly
+    - id: "kpi_mean_cycle_time"
+      name: "Temps de cycle moyen"
+      target: 300                           # Secondes
+      measurement_frequency: per_execution
+
+  changelog:
+    - version: "1.0.0"
+      date: "2026-01-15"
+      type: major
+      summary: "Version initiale de la constellation"
+      approved_by: "sponsor@organisation.fr" # [OBL pour Macro]
+
+  compliance:
+    eu_ai_act:
+      risk_category: limited                # Risque agrégé [OBL]
+      art9_risk_management: true
+      art12_logging: true
+      art13_transparency: true
+      art14_human_oversight: true
+
+  catalog:
+    keywords: []                            # [OBL]
+    themes: []                              # [OBL]
+    member_oc_refs:                         # Référence vers les OC membres [OBL]
+      - "org.domaine.oc_1"
+      - "org.domaine.oc_2"
+      - "org.domaine.oc_validateur"

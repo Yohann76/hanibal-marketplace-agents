@@ -1,0 +1,256 @@
+
+<script type="text/javascript" src="https://gc.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=rNLgOSGEn2yNKuUlkPwrPHETWXomCVi0IJ7DO7YkruEwl2milFcoBW2M21NYwQdMJWTzrSmxLjsr_GZlQrRU-Y2nRnqrf9itVh1mrWGhlfVDTs_nwmCZy8eimV3xIx4IX9cH1rmhfaafE1cDdjfU2sCqFTAPEzSux3zf4K4zcLOtrxWBWLwtp0wmSd0GFpKAT1DgQPktKPrP4ZMmi52WeaLsds4xrbxHMRnAOt6FguDeE-8Ujgqzyr0SdH59y40GEKpeDo7GNZsudF7jlN2et5mhkfzWevaW9wGX6zQeVmO8JuBbh-EtTqMmsn9gTe11YjwL1I0lX92rzi4sj_KjYOOyltWdAg-hdXoMvOhIMV9UdnxSfDYVCbWiCkN_A8iTi-ft2fz-KYQ4Dk493kwhF2_xb2_dswRp-XBeVlyLnV807PukAXZMkOjmJTP70URXhli1cV2zIW8n-5NL3ZaB6c_MpXDr1Ht-86ijGmc4vn8aENmssh1BJqEteHvwbayCLenWhomdfAdk3Vzly4icHEPWFCaIpi8YWAo-o0DJ99sgnhy6FWSIog3aa6JfwOjHjdVHG4TiQkmwXbhTNOwRAXkrYzDcITlciLOHNTGwYW5Ij-rhj56eCdL_7OTYkkRYmcgcEgzTBeaUoaJkFhSoOqhRAo9bRha8rsSkD0NH56w8eoNKQVm6lCXnWTmU76YZk47s6_FFYRiVt6dexoxqBUWA5EXBayBvvJzDjoxpI4F-xzCWGGCgXqH7vW4DU7swwh_GAZ8-FLaQU7epXcxlqZ5Y8_YYiYhWhIYa1V3KYteQKFWohNAf_S7q5zuFJGcBDunbDp7H8SzP-S00wIsaGumocQ__38WzhCA8pBz5E_UfqR8ebRb_uwJ9swHn_x8DTHNfL796_GxyyhUV5C7HHFykPHQ2aA0AKO3WjWwR2BX9Ht35kx9d7P5ScBxqpblwL6nCCg7b-fx669-yeosxBdsuHxnwIIsaTW_14uhIUIXbFqrAVPNOaixDsB1A6MRQYMfJ7mUSI5u1GDgFIBNEa4fqjoFmhCCKXi3RQcu28920Ncfgjlk6WeJQv7TGlwla4_OVTK_Ap3yUQ_ICgkoeG_ymibLxsAC6ldMGQ313kW20jX1rAw-XH4LZXx6LqU7h54bIDE6wBw8I5KvxJIac781Pp00p9dWIUfyBjgMiVQm4T2f3D5eSpGl3lRgSD1ZsSqtqHEHka3_Cfu711vfPYM3kMo0NhCsSrl-40r01bd6-G2TInlasijmzlDRzgCaY_JUw8wJPK_ShtIQPn5Q-a818DtaxxlJF6DuwnCTj5dVEr_BspvmHGdYx9vXDHu1zoQ4wuZu7TPZbpjKwY8rtvlRAZa2_yufiLoCJpOTnLdUNQVVyoBCES9WAikP0RmT0HDJ9Co2vISki2tzRrSQaJuB6pecbptwdiHvCUgyFDciGK1Y_QpkUdWSlAEN7XbnXwAqyzvOyHTSuUBvXeA8oPpdfPvigzTrhmH1tGD1ssGohjOhWkm7VnM2XXi3Bbz8qN4b39fNCbZfCpJzAC_Ew2PVHE4iLTVuhrNtimpxmmxmtlkFzDn8YjJzIKWMvnArGglLgdrza0k-d3HOLCEVyzw8Er2RypJN7NVEkehED2004O2cU8sSX45t3UdHMFkNiYtiq4QT5HLRRrvBFq6348w" nonce="de197de5bcee0768a51fae06798571e7" charset="UTF-8"></script><h2 class="sr-only">Le traitement sub-symbolique d'un LLM : pipeline de la tokenisation à la distribution de sortie</h2>
+<style>
+.nb{font-size:13px;background:transparent;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:6px 16px;cursor:pointer;color:var(--color-text-primary)}
+.nb:hover{background:var(--color-background-secondary)}
+.nb:disabled{opacity:.3;cursor:default}
+.slbl{font-size:11px;font-weight:500;color:var(--color-text-tertiary);letter-spacing:.05em;text-transform:uppercase;margin:0 0 5px}
+.ep{font-size:13px;color:var(--color-text-secondary);line-height:1.65;margin:10px 0 0;min-height:80px}
+.tg{display:inline-block;font-size:11px;padding:2px 9px;border-radius:4px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);color:var(--color-text-secondary);font-family:var(--font-mono)}
+</style>
+
+<div id="nav" style="display:none;margin:0 0 10px">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+    <button class="nb" id="bP" onclick="go(-1)" disabled>← Précédent</button>
+    <div style="text-align:center">
+      <div style="display:flex;gap:5px;justify-content:center;margin-bottom:4px" id="dts"></div>
+      <span style="font-size:11px;color:var(--color-text-tertiary)" id="slb">1 / 5 — Tokenisation</span>
+    </div>
+    <button class="nb" id="bN" onclick="go(1)">Suivant →</button>
+  </div>
+</div>
+
+<!-- PANEL 0 — Tokenisation -->
+<div id="p0">
+<p class="slbl">Étape 1 / 5 — Tokenisation</p>
+<svg width="100%" viewBox="0 0 640 218" role="img">
+<title>Tokenisation : le texte est découpé en sous-unités, chacune recevant un identifiant entier</title>
+<defs><marker id="ar0" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<text class="th" x="320" y="19" text-anchor="middle" dominant-baseline="central">L'agent traite les données</text>
+<text class="ts" x="320" y="36" text-anchor="middle" dominant-baseline="central">Texte brut → Tokenizer BPE → séquence d'entiers</text>
+<line x1="320" y1="46" x2="320" y2="61" class="arr" marker-end="url(#ar0)"/>
+<g class="node c-amber" onclick="sendPrompt('Pourquoi les IDs de tokens sont-ils arbitraires et ne portent-ils aucune sémantique intrinsèque ?')">
+  <rect x="14" y="67" width="122" height="56" rx="8" stroke-width="0.5"/>
+  <text class="th" x="75" y="89" text-anchor="middle" dominant-baseline="central">L'agent</text>
+  <text class="ts" x="75" y="108" text-anchor="middle" dominant-baseline="central">ID : 2273</text>
+</g>
+<g class="node c-amber" onclick="sendPrompt('Explique le fonctionnement du tokenizer BPE et les biais sémantiques qu\\'il introduit')">
+  <rect x="152" y="67" width="122" height="56" rx="8" stroke-width="0.5"/>
+  <text class="th" x="213" y="89" text-anchor="middle" dominant-baseline="central">traite</text>
+  <text class="ts" x="213" y="108" text-anchor="middle" dominant-baseline="central">ID : 14827</text>
+</g>
+<g class="node c-amber" onclick="sendPrompt('Qu\\'est-ce que la tokenisation subword et pourquoi un mot peut-il donner plusieurs tokens ?')">
+  <rect x="290" y="67" width="104" height="56" rx="8" stroke-width="0.5"/>
+  <text class="th" x="342" y="89" text-anchor="middle" dominant-baseline="central">les</text>
+  <text class="ts" x="342" y="108" text-anchor="middle" dominant-baseline="central">ID : 472</text>
+</g>
+<g class="node c-amber" onclick="sendPrompt('Développe les limites de la tokenisation pour la représentation sémantique dans les LLMs')">
+  <rect x="410" y="67" width="140" height="56" rx="8" stroke-width="0.5"/>
+  <text class="th" x="480" y="89" text-anchor="middle" dominant-baseline="central">données</text>
+  <text class="ts" x="480" y="108" text-anchor="middle" dominant-baseline="central">ID : 6891</text>
+</g>
+<g class="c-gray"><rect x="564" y="67" width="64" height="56" rx="8" stroke-width="0.5" stroke-dasharray="4 2"/><text class="ts" x="596" y="89" text-anchor="middle" dominant-baseline="central">+ N</text><text class="ts" x="596" y="108" text-anchor="middle" dominant-baseline="central">tokens</text></g>
+<text class="ts" x="320" y="148" text-anchor="middle" dominant-baseline="central">Chaque token → un entier. Aucune sémantique — juste un index dans un vocabulaire de ~100 000 entrées.</text>
+<text class="ts" x="320" y="166" text-anchor="middle" dominant-baseline="central">L'ID 14827 ne « signifie » pas « traite » — c'est une position arbitraire dans une table.</text>
+</svg>
+<div class="ep">Le texte est découpé en <span style="font-weight:500">sous-unités (tokens)</span> par un algorithme BPE ou SentencePiece, puis chaque token est converti en un entier — son index dans le vocabulaire. Dès la première étape, toute sémantique est perdue : « traitement » et « traiter » peuvent avoir des IDs très éloignés. Le modèle ne lit pas des mots — il reçoit une séquence d'entiers. <span class="tg">Type : INTEGER[ ]</span></div>
+</div>
+
+<!-- PANEL 1 — Embeddings -->
+<div id="p1">
+<p class="slbl" style="margin-top:14px">Étape 2 / 5 — Embeddings</p>
+<svg width="100%" viewBox="0 0 640 218" role="img">
+<title>Embedding : chaque token ID est converti en un vecteur dense de 4096 flottants via une matrice apprise</title>
+<defs><marker id="ar1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<text class="ts" x="147" y="18" text-anchor="middle" dominant-baseline="central">E ∈ ℝ^{V×d}</text>
+<text class="ts" x="400" y="18" text-anchor="middle" dominant-baseline="central">16 dim. sur 4 096 — vecteur dense ∈ ℝ^{4096} (GPT-3 : 12 288)</text>
+<g class="c-amber"><rect x="12" y="26" width="115" height="58" rx="8" stroke-width="0.5"/><text class="th" x="69" y="48" text-anchor="middle" dominant-baseline="central">traite</text><text class="ts" x="69" y="67" text-anchor="middle" dominant-baseline="central">ID : 14827</text></g>
+<line x1="129" y1="55" x2="163" y2="55" class="arr" marker-end="url(#ar1)"/>
+<g class="node" onclick="sendPrompt('Explique la géométrie des embeddings : distance cosinus, espace latent et analogies vectorielles comme roi-reine')">
+<rect x="168" y="26" width="27" height="58" rx="2" fill="#BA7517"/>
+<rect x="197" y="26" width="27" height="58" rx="2" fill="#85B7EB"/>
+<rect x="226" y="26" width="27" height="58" rx="2" fill="#BA7517"/>
+<rect x="255" y="26" width="27" height="58" rx="2" fill="#85B7EB"/>
+<rect x="284" y="26" width="27" height="58" rx="2" fill="#BA7517"/>
+<rect x="313" y="26" width="27" height="58" rx="2" fill="#B4B2A9"/>
+<rect x="342" y="26" width="27" height="58" rx="2" fill="#85B7EB"/>
+<rect x="371" y="26" width="27" height="58" rx="2" fill="#BA7517"/>
+<rect x="400" y="26" width="27" height="58" rx="2" fill="#85B7EB"/>
+<rect x="429" y="26" width="27" height="58" rx="2" fill="#BA7517"/>
+<rect x="458" y="26" width="27" height="58" rx="2" fill="#BA7517"/>
+<rect x="487" y="26" width="27" height="58" rx="2" fill="#85B7EB"/>
+<rect x="516" y="26" width="27" height="58" rx="2" fill="#B4B2A9"/>
+<rect x="545" y="26" width="27" height="58" rx="2" fill="#BA7517"/>
+<rect x="574" y="26" width="27" height="58" rx="2" fill="#85B7EB"/>
+<rect x="603" y="26" width="27" height="58" rx="2" fill="#BA7517"/>
+</g>
+<text class="ts" x="181" y="98" text-anchor="middle">+.42</text>
+<text class="ts" x="210" y="98" text-anchor="middle">−.18</text>
+<text class="ts" x="239" y="98" text-anchor="middle">+.87</text>
+<text class="ts" x="268" y="98" text-anchor="middle">−.31</text>
+<text class="ts" x="297" y="98" text-anchor="middle">+.65</text>
+<text class="ts" x="326" y="98" text-anchor="middle">+.12</text>
+<text class="ts" x="355" y="98" text-anchor="middle">−.78</text>
+<text class="ts" x="384" y="98" text-anchor="middle">+.44</text>
+<text class="ts" x="413" y="98" text-anchor="middle">−.55</text>
+<text class="ts" x="442" y="98" text-anchor="middle">+.29</text>
+<text class="ts" x="471" y="98" text-anchor="middle">+.91</text>
+<text class="ts" x="500" y="98" text-anchor="middle">−.67</text>
+<text class="ts" x="529" y="98" text-anchor="middle">+.38</text>
+<text class="ts" x="558" y="98" text-anchor="middle">−.22</text>
+<text class="ts" x="587" y="98" text-anchor="middle">+.73</text>
+<text class="ts" x="616" y="98" text-anchor="middle">−.44</text>
+<rect x="170" y="118" width="12" height="9" rx="2" fill="#BA7517"/><text class="ts" x="186" y="127">positif</text>
+<rect x="248" y="118" width="12" height="9" rx="2" fill="#85B7EB"/><text class="ts" x="264" y="127">négatif</text>
+<rect x="318" y="118" width="12" height="9" rx="2" fill="#B4B2A9"/><text class="ts" x="334" y="127">~zéro</text>
+<text class="ts" x="320" y="155" text-anchor="middle" dominant-baseline="central">Ces flottants n'ont aucun sens isolément — c'est leur géométrie relative dans ℝᵈ qui encode les relations.</text>
+<text class="ts" x="320" y="173" text-anchor="middle" dominant-baseline="central">Le « sens » n'est pas dans le vecteur : il est dans les distances et angles entre vecteurs voisins.</text>
+</svg>
+<div class="ep">L'entier 14827 est mappé via la matrice d'embedding E ∈ ℝ^{V×d} — une ligne de cette matrice, V ≈ 100 000, d = 4 096. Résultat : <span style="font-weight:500">4 096 flottants</span> sans signification intrinsèque. Ce qui encode les relations sémantiques, c'est la <span style="font-weight:500">géométrie relative</span> : « traiter » et « traitement » ont des vecteurs proches car ils co-occurent dans des contextes similaires pendant l'entraînement. Pas de symbole — de la géométrie statistique apprise. <span class="tg">Type : ℝ^{4096}</span></div>
+</div>
+
+<!-- PANEL 2 — Attention -->
+<div id="p2">
+<p class="slbl" style="margin-top:14px">Étape 3 / 5 — Matrices d'attention</p>
+<svg width="100%" viewBox="0 0 640 218" role="img">
+<title>Attention : chaque token calcule sa similitude géométrique avec tous les autres via Q·K^T divisé par racine de d, normalisé par softmax</title>
+<defs><marker id="ar2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<text class="th" x="320" y="17" text-anchor="middle" dominant-baseline="central">Attention(Q, K, V) = softmax( QKᵀ / √d ) · V</text>
+<text class="ts" x="320" y="34" text-anchor="middle" dominant-baseline="central">Poids d'attention de « traite » sur chaque token (requête → tous les tokens)</text>
+<!-- Weight bars -->
+<text class="ts" x="75" y="47" text-anchor="middle">0.08</text>
+<rect x="57" y="53" width="36" height="14" rx="3" fill="#B5D4F4"/>
+<text class="ts" x="213" y="47" text-anchor="middle">0.55</text>
+<rect x="153" y="53" width="120" height="14" rx="3" fill="#378ADD"/>
+<text class="ts" x="342" y="47" text-anchor="middle">0.21</text>
+<rect x="319" y="53" width="46" height="14" rx="3" fill="#85B7EB"/>
+<text class="ts" x="484" y="47" text-anchor="middle">0.16</text>
+<rect x="466" y="53" width="36" height="14" rx="3" fill="#85B7EB"/>
+<!-- Lines from query "traite" to bars -->
+<line x1="213" y1="120" x2="75" y2="69" stroke="#B5D4F4" stroke-width="0.8" fill="none"/>
+<line x1="213" y1="120" x2="213" y2="69" stroke="#378ADD" stroke-width="3.5" fill="none"/>
+<line x1="213" y1="120" x2="342" y2="69" stroke="#85B7EB" stroke-width="1.5" fill="none"/>
+<line x1="213" y1="120" x2="484" y2="69" stroke="#85B7EB" stroke-width="1.2" fill="none"/>
+<!-- Token boxes -->
+<g class="node c-blue" onclick="sendPrompt('Développe les rôles de Q (query), K (key) et V (value) dans le mécanisme d\\'attention')">
+  <rect x="22" y="122" width="106" height="50" rx="6" stroke-width="0.5"/>
+  <text class="th" x="75" y="141" text-anchor="middle" dominant-baseline="central">L'agent</text>
+  <text class="ts" x="75" y="158" text-anchor="middle" dominant-baseline="central">h₁ ∈ ℝᵈ</text>
+</g>
+<g class="node c-purple" onclick="sendPrompt('Explique pourquoi le self-attention ne produit pas de compréhension symbolique mais une pondération géométrique')">
+  <rect x="160" y="122" width="106" height="50" rx="6" stroke-width="0.5"/>
+  <text class="th" x="213" y="141" text-anchor="middle" dominant-baseline="central">traite</text>
+  <text class="ts" x="213" y="158" text-anchor="middle" dominant-baseline="central">← requête</text>
+</g>
+<g class="node c-blue" onclick="sendPrompt('Qu\\'est-ce que le multi-head attention et pourquoi avoir 32 à 128 têtes en parallèle ?')">
+  <rect x="289" y="122" width="106" height="50" rx="6" stroke-width="0.5"/>
+  <text class="th" x="342" y="141" text-anchor="middle" dominant-baseline="central">les</text>
+  <text class="ts" x="342" y="158" text-anchor="middle" dominant-baseline="central">h₃ ∈ ℝᵈ</text>
+</g>
+<g class="node c-blue" onclick="sendPrompt('Pourquoi la matrice d\\'attention encode-t-elle des dépendances statistiques et non du sens symbolique ?')">
+  <rect x="430" y="122" width="110" height="50" rx="6" stroke-width="0.5"/>
+  <text class="th" x="485" y="141" text-anchor="middle" dominant-baseline="central">données</text>
+  <text class="ts" x="485" y="158" text-anchor="middle" dominant-baseline="central">h₄ ∈ ℝᵈ</text>
+</g>
+<text class="ts" x="320" y="196" text-anchor="middle" dominant-baseline="central">Épaisseur = poids d'attention. Similitude géométrique dans ℝᵈ — aucune compréhension, aucun symbole.</text>
+</svg>
+<div class="ep">Pour chaque token (la « requête »), l'attention projette les vecteurs sur 3 espaces : Q (query), K (key), V (value). Le produit QKᵀ mesure la <span style="font-weight:500">similitude géométrique</span> entre tokens dans ℝᵈ. Normalisé par softmax, ce score devient un poids de pondération des valeurs V. Aucune « compréhension » — une combinaison linéaire pondérée par des similarités statistiques. En parallèle, 32 à 128 « têtes » font ceci simultanément, chacune capturant un type de relation différent. <span class="tg">Type : matmul ∈ ℝ^{d×d}</span></div>
+</div>
+
+<!-- PANEL 3 — Couches -->
+<div id="p3">
+<p class="slbl" style="margin-top:14px">Étape 4 / 5 — N couches transformer</p>
+<svg width="100%" viewBox="0 0 640 218" role="img">
+<title>N couches transformer empilées : chaque couche transforme les vecteurs via Multi-head Attention et Feed-Forward Network sans jamais manipuler de symboles</title>
+<defs><marker id="ar3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g class="node c-teal" onclick="sendPrompt('Pourquoi l\\'empilement de couches transformer fait-il émerger des capacités apparemment symboliques ?')">
+  <rect x="148" y="12" width="344" height="50" rx="8" stroke-width="0.5"/>
+  <text class="th" x="320" y="30" text-anchor="middle" dominant-baseline="central">Couche N</text>
+  <text class="ts" x="320" y="48" text-anchor="middle" dominant-baseline="central">Multi-head Attention · LayerNorm · Feed-Forward</text>
+</g>
+<line x1="320" y1="82" x2="320" y2="64" class="arr" marker-end="url(#ar3)"/>
+<g class="node c-teal" onclick="sendPrompt('Quel est le rôle du Feed-Forward Network dans un bloc transformer et comment contribue-t-il à l\\'émergence ?')">
+  <rect x="148" y="84" width="344" height="50" rx="8" stroke-width="0.5"/>
+  <text class="th" x="320" y="102" text-anchor="middle" dominant-baseline="central">Couche 2</text>
+  <text class="ts" x="320" y="120" text-anchor="middle" dominant-baseline="central">Multi-head Attention · LayerNorm · Feed-Forward</text>
+</g>
+<line x1="320" y1="154" x2="320" y2="136" class="arr" marker-end="url(#ar3)"/>
+<g class="node c-teal" onclick="sendPrompt('Comment les connexions résiduelles et la layer normalization stabilisent-elles l\\'entraînement du transformer ?')">
+  <rect x="148" y="156" width="344" height="50" rx="8" stroke-width="0.5"/>
+  <text class="th" x="320" y="174" text-anchor="middle" dominant-baseline="central">Couche 1</text>
+  <text class="ts" x="320" y="192" text-anchor="middle" dominant-baseline="central">Multi-head Attention · LayerNorm · Feed-Forward</text>
+</g>
+<text class="ts" x="502" y="30" dominant-baseline="central">GPT-4 : 96 couches</text>
+<text class="ts" x="502" y="47" dominant-baseline="central">~1.7T paramètres</text>
+<text class="ts" x="502" y="100" dominant-baseline="central">32–128 têtes</text>
+<text class="ts" x="502" y="118" dominant-baseline="central">d = 12 288</text>
+<text class="ts" x="502" y="173" dominant-baseline="central">~200 matmuls</text>
+<text class="ts" x="502" y="190" dominant-baseline="central">par token</text>
+<text class="ts" x="143" y="37" text-anchor="end">hₙ ∈ ℝᵈ</text>
+<text class="ts" x="143" y="109" text-anchor="end">h₂ ∈ ℝᵈ</text>
+<text class="ts" x="143" y="181" text-anchor="end">h₀ ∈ ℝᵈ</text>
+</svg>
+<div class="ep">Le transformer empile N couches identiques. Chaque couche transforme les vecteurs via l'attention multi-têtes + un FFN (deux matrices + non-linéarité GELU) + connexions résiduelles + layer normalization. À <span style="font-weight:500">aucun moment</span> : pas de variable symbolique, pas de prédicat logique, pas de règle explicite. Des milliards de multiplications matricielles en cascade produisent des représentations de plus en plus abstraites — statistiquement corrélées avec des structures sémantiques, mais jamais symboliques. <span class="tg">Type : cascade matmul ∈ ℝᵈ</span></div>
+</div>
+
+<!-- PANEL 4 — Distribution -->
+<div id="p4">
+<p class="slbl" style="margin-top:14px">Étape 5 / 5 — Distribution de sortie</p>
+<svg width="100%" viewBox="0 0 640 218" role="img">
+<title>Distribution de sortie : le vecteur final est projeté sur le vocabulaire entier via softmax pour obtenir une distribution probabiliste sur le prochain token</title>
+<text class="th" x="320" y="17" text-anchor="middle" dominant-baseline="central">Contexte : « L'agent traite les ___ »</text>
+<text class="ts" x="320" y="34" text-anchor="middle" dominant-baseline="central">softmax( W_lm · hₙ ) — projection sur V ≈ 100 000 tokens</text>
+<text class="ts" x="188" y="63" text-anchor="end">données</text>
+<rect x="193" y="53" width="200" height="18" rx="3" fill="#1D9E75"/>
+<text class="ts" x="399" y="63">31%</text>
+<text class="ts" x="188" y="89" text-anchor="end">informations</text>
+<rect x="193" y="79" width="143" height="18" rx="3" fill="#3B8BD4" opacity=".85"/>
+<text class="ts" x="342" y="89">22%</text>
+<text class="ts" x="188" y="115" text-anchor="end">requêtes</text>
+<rect x="193" y="105" width="117" height="18" rx="3" fill="#3B8BD4" opacity=".65"/>
+<text class="ts" x="316" y="115">18%</text>
+<text class="ts" x="188" y="141" text-anchor="end">fichiers</text>
+<rect x="193" y="131" width="91" height="18" rx="3" fill="#3B8BD4" opacity=".45"/>
+<text class="ts" x="290" y="141">14%</text>
+<text class="ts" x="188" y="167" text-anchor="end">résultats</text>
+<rect x="193" y="157" width="58" height="18" rx="3" fill="#3B8BD4" opacity=".3"/>
+<text class="ts" x="257" y="167">9%</text>
+<text class="ts" x="495" y="63">+ 99 995 autres tokens</text>
+<text class="ts" x="495" y="80">(probabilités ≈ 0)</text>
+<text class="ts" x="495" y="100">Σ probabilités = 100%</text>
+<text class="ts" x="495" y="120">Pas de certitude —</text>
+<text class="ts" x="495" y="136">une distribution.</text>
+<text class="ts" x="320" y="197" text-anchor="middle" dominant-baseline="central">Le LLM n'a pas « décidé » — il a échantillonné. La sortie symbolique est l'artefact d'une cascade sub-symbolique.</text>
+</svg>
+<div class="ep">La couche de sortie projette hₙ ∈ ℝᵈ sur un espace de logits de dimension V (~100 000 tokens) via W_lm, puis softmax normalise en probabilités. Le LLM n'a pas <span style="font-weight:500">décidé</span> de dire « données » — il a <span style="font-weight:500">échantillonné</span> selon une distribution. Le mot que vous lisez est l'artefact final d'une cascade sub-symbolique. C'est pourquoi la gouvernance de l'OC doit être <span style="font-weight:500">externe</span> : elle ne peut pas être injectée dans les paramètres du modèle — elle doit envelopper la sortie. <span class="tg">Type : distribution sur ℝ^{V}</span></div>
+</div>
+
+<script>
+let cur=0;
+const N=5;
+const lbs=["Tokenisation — texte → entiers","Embeddings — entiers → vecteurs","Attention — pondération géométrique","Couches N× — transformations","Distribution — pas de décision"];
+
+function init(){
+  const dts=document.getElementById('dts');
+  for(let i=0;i<N;i++){const d=document.createElement('div');d.id='dd'+i;d.style.cssText='width:8px;height:8px;border-radius:50%;transition:background .2s;background:var(--color-border-secondary)';dts.appendChild(d);}
+  for(let i=1;i<N;i++) document.getElementById('p'+i).style.display='none';
+  document.getElementById('nav').style.display='block';
+  upd();
+}
+
+function go(d){
+  document.getElementById('p'+cur).style.display='none';
+  cur=Math.max(0,Math.min(N-1,cur+d));
+  document.getElementById('p'+cur).style.display='block';
+  upd();
+}
+
+function upd(){
+  document.getElementById('bP').disabled=(cur===0);
+  document.getElementById('bN').disabled=(cur===N-1);
+  document.getElementById('slb').textContent=(cur+1)+' / '+N+' — '+lbs[cur];
+  for(let i=0;i<N;i++) document.getElementById('dd'+i).style.background=i===cur?'var(--color-text-secondary)':'var(--color-border-secondary)';
+}
+
+init();
+</script>

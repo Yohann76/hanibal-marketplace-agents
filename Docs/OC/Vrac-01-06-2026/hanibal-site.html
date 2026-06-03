@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hanibal — Agence de Ressources Agentiques</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,300;1,9..144,500&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0c1a2e;
+  --navy-mid: #152642;
+  --blue: #1d4ed8;
+  --blue-light: #3b82f6;
+  --blue-pale: #dbeafe;
+  --offwhite: #f8fafc;
+  --border: #e2e8f0;
+  --text: #1e293b;
+  --text-mid: #475569;
+  --text-light: #94a3b8;
+  --white: #ffffff;
+  --serif: 'Fraunces', Georgia, serif;
+  --sans: 'Plus Jakarta Sans', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--sans);
+  font-weight: 400;
+  color: var(--text);
+  background: var(--white);
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+/* ── TYPOGRAPHY ── */
+h1 { font-family: var(--serif); font-weight: 500; font-size: clamp(2.4rem, 5vw, 4rem); line-height: 1.1; letter-spacing: -0.02em; }
+h2 { font-family: var(--serif); font-weight: 500; font-size: clamp(1.8rem, 3.5vw, 2.8rem); line-height: 1.2; letter-spacing: -0.02em; }
+h3 { font-family: var(--sans); font-weight: 600; font-size: 1.1rem; letter-spacing: 0.01em; }
+p { line-height: 1.75; color: var(--text-mid); }
+
+/* ── LAYOUT ── */
+.container { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
+.section { padding: 96px 0; }
+.section-sm { padding: 64px 0; }
+
+/* ── HEADER ── */
+header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(12, 26, 46, 0.97);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.header-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; max-width: 1160px; margin: 0 auto; height: 68px;
+}
+
+/* Logo */
+.logo { display: flex; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; }
+.logo-mark {
+  font-family: var(--serif); font-size: 1.4rem; font-weight: 700;
+  letter-spacing: -0.04em; color: var(--white); line-height: 1;
+}
+.logo-mark span { color: var(--blue-light); }
+.logo-sub {
+  font-size: 0.62rem; font-weight: 500; letter-spacing: 0.14em;
+  text-transform: uppercase; color: rgba(255,255,255,0.4); line-height: 1.2;
+  display: block; padding-left: 2px;
+}
+
+nav { display: flex; align-items: center; gap: 8px; }
+nav a {
+  font-size: 0.88rem; font-weight: 500; color: rgba(255,255,255,0.65);
+  text-decoration: none; padding: 8px 14px; border-radius: 6px;
+  transition: color .2s, background .2s; cursor: pointer;
+}
+nav a:hover, nav a.active { color: var(--white); background: rgba(255,255,255,0.08); }
+.btn-nav {
+  background: var(--blue); color: var(--white) !important;
+  padding: 9px 20px !important; border-radius: 8px !important;
+  font-weight: 600 !important; transition: background .2s !important;
+}
+.btn-nav:hover { background: var(--blue-light) !important; }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 14px 28px; border-radius: 10px; font-weight: 600;
+  font-size: 0.95rem; text-decoration: none; cursor: pointer;
+  transition: all .2s; border: none; font-family: var(--sans);
+}
+.btn-primary { background: var(--blue); color: var(--white); }
+.btn-primary:hover { background: var(--blue-light); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(29,78,216,0.35); }
+.btn-outline { background: transparent; color: var(--white); border: 1.5px solid rgba(255,255,255,0.25); }
+.btn-outline:hover { border-color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.06); }
+.btn-outline-dark { background: transparent; color: var(--navy); border: 1.5px solid var(--border); }
+.btn-outline-dark:hover { border-color: var(--blue); color: var(--blue); }
+
+/* ── TAGS / BADGES ── */
+.tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(59,130,246,0.12); color: var(--blue-light);
+  border: 1px solid rgba(59,130,246,0.2); border-radius: 100px;
+  font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em;
+  text-transform: uppercase; padding: 5px 12px;
+}
+.tag-dark {
+  background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.65);
+  border-color: rgba(255,255,255,0.12);
+}
+
+/* ── PAGE MANAGEMENT ── */
+.page { display: none; padding-top: 68px; }
+.page.active { display: block; animation: fadeUp .4s ease; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── HOME ── */
+.hero {
+  background: var(--navy);
+  background-image: radial-gradient(ellipse 70% 60% at 60% 0%, rgba(29,78,216,0.18) 0%, transparent 70%),
+                    radial-gradient(ellipse 40% 40% at 10% 80%, rgba(29,78,216,0.1) 0%, transparent 60%);
+  padding: 120px 0 100px;
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content: ''; position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events: none;
+}
+.hero-inner { display: grid; grid-template-columns: 1fr 380px; gap: 80px; align-items: center; }
+.hero-label { margin-bottom: 24px; }
+.hero h1 { color: var(--white); margin-bottom: 24px; }
+.hero h1 em { font-style: italic; color: var(--blue-light); }
+.hero-sub { font-size: 1.1rem; color: rgba(255,255,255,0.6); max-width: 520px; margin-bottom: 40px; line-height: 1.7; }
+.hero-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.hero-note { font-size: 0.8rem; color: rgba(255,255,255,0.35); margin-top: 16px; }
+.hero-card {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px; padding: 32px; backdrop-filter: blur(10px);
+}
+.hero-stat { padding: 20px 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.hero-stat:last-child { border-bottom: none; padding-bottom: 0; }
+.hero-stat-num { font-family: var(--serif); font-size: 2.6rem; font-weight: 700; color: var(--blue-light); line-height: 1; }
+.hero-stat-label { font-size: 0.83rem; color: rgba(255,255,255,0.5); margin-top: 4px; }
+
+/* Douleurs */
+.douleurs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: 56px; }
+.douleur {
+  background: var(--offwhite); padding: 40px 32px;
+  border-top: 3px solid transparent; transition: border-color .2s;
+}
+.douleur:hover { border-color: var(--blue); }
+.douleur-num { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; color: var(--blue); text-transform: uppercase; margin-bottom: 16px; }
+.douleur h3 { font-size: 1.05rem; color: var(--navy); margin-bottom: 12px; }
+
+/* Quote block */
+.quote-block {
+  background: var(--navy); padding: 80px 0;
+}
+.quote-inner { max-width: 760px; margin: 0 auto; text-align: center; }
+.quote-text {
+  font-family: var(--serif); font-style: italic; font-size: clamp(1.4rem, 2.5vw, 2rem);
+  color: var(--white); line-height: 1.5; margin-bottom: 24px;
+}
+.quote-text em { color: var(--blue-light); font-style: normal; }
+.quote-source { font-size: 0.82rem; color: rgba(255,255,255,0.35); letter-spacing: 0.06em; text-transform: uppercase; }
+
+/* Piliers */
+.piliers-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--border); }
+.pilier { background: var(--white); padding: 40px 36px; position: relative; }
+.pilier-num {
+  font-family: var(--serif); font-size: 3.5rem; font-weight: 700; color: var(--offwhite);
+  position: absolute; top: 24px; right: 28px; line-height: 1;
+}
+.pilier h3 { color: var(--navy); margin-bottom: 12px; font-size: 1rem; }
+
+/* Formules aperçu */
+.formules-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
+.formule-card {
+  border: 1.5px solid var(--border); border-radius: 16px; padding: 36px 28px;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+  cursor: pointer; position: relative; overflow: hidden;
+}
+.formule-card:hover { border-color: var(--blue); transform: translateY(-4px); box-shadow: 0 16px 40px rgba(29,78,216,0.12); }
+.formule-card.featured { border-color: var(--blue); background: linear-gradient(135deg, #f0f6ff 0%, #fff 100%); }
+.formule-badge {
+  position: absolute; top: 16px; right: 16px;
+  background: var(--blue); color: white; font-size: 0.7rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 10px; border-radius: 100px;
+}
+.formule-duree { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--blue); margin-bottom: 8px; }
+.formule-card h3 { font-size: 1.2rem; color: var(--navy); margin-bottom: 12px; }
+.formule-opco { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 0.8rem; color: var(--text-light); }
+.formule-opco strong { color: var(--text-mid); }
+
+/* Stat band */
+.stat-band { background: var(--offwhite); padding: 64px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.stat-band-inner { display: grid; grid-template-columns: 1fr 1px 1fr; gap: 0; align-items: center; }
+.stat-band-divider { background: var(--border); height: 80px; }
+.stat-band-item { padding: 0 48px; text-align: center; }
+.stat-band-num { font-family: var(--serif); font-size: 3.5rem; font-weight: 700; color: var(--navy); line-height: 1; }
+.stat-band-label { color: var(--text-mid); font-size: 0.9rem; margin-top: 8px; line-height: 1.5; }
+.stat-band-source { font-size: 0.72rem; color: var(--text-light); margin-top: 4px; }
+
+/* CTA section home */
+.cta-home { background: var(--navy); padding: 96px 0; text-align: center; }
+.cta-home h2 { color: var(--white); margin-bottom: 16px; }
+.cta-home p { color: rgba(255,255,255,0.55); max-width: 480px; margin: 0 auto 40px; }
+.cta-actions { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+
+/* ── COACHING PAGE ── */
+.page-hero {
+  background: var(--navy); padding: 80px 0 72px;
+  background-image: radial-gradient(ellipse 50% 80% at 80% 50%, rgba(29,78,216,0.15) 0%, transparent 70%);
+}
+.page-hero .container { display: grid; grid-template-columns: 1fr 320px; gap: 80px; align-items: center; }
+.page-hero h1 { color: var(--white); }
+.page-hero p { color: rgba(255,255,255,0.55); font-size: 1.05rem; margin-top: 16px; }
+.page-hero-aside {
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px; padding: 28px;
+}
+.page-hero-aside-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.35); margin-bottom: 16px; }
+.page-hero-aside-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.07); }
+.page-hero-aside-item:last-child { border-bottom: none; }
+.check { width: 20px; height: 20px; border-radius: 50%; background: rgba(59,130,246,0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.check svg { width: 10px; height: 10px; }
+.page-hero-aside-text { font-size: 0.88rem; color: rgba(255,255,255,0.6); }
+
+/* Formule detail cards */
+.formule-detail {
+  padding: 64px 0; border-bottom: 1px solid var(--border);
+}
+.formule-detail:last-of-type { border-bottom: none; }
+.formule-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; }
+.formule-detail-num { font-family: var(--serif); font-size: 5rem; font-weight: 700; color: var(--blue-pale); line-height: 1; margin-bottom: -8px; }
+.formule-detail-tag { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--blue); margin-bottom: 8px; }
+.formule-detail h2 { font-size: 2rem; margin-bottom: 16px; }
+.formule-detail-desc { margin-bottom: 28px; }
+.formule-detail-side { background: var(--offwhite); border-radius: 16px; padding: 32px; }
+.detail-item { display: flex; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+.detail-item:last-child { border-bottom: none; }
+.detail-icon { color: var(--blue); font-size: 1.2rem; flex-shrink: 0; margin-top: 2px; }
+.detail-item-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-light); margin-bottom: 2px; }
+.detail-item-value { font-size: 0.95rem; color: var(--text); font-weight: 500; }
+.livrable-box { background: var(--navy); color: white; border-radius: 12px; padding: 20px 24px; margin-top: 24px; }
+.livrable-box-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.4); margin-bottom: 4px; }
+.livrable-box-value { font-size: 0.95rem; font-weight: 500; }
+
+/* OPCO block */
+.opco-block { background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%); border: 1px solid #bfdbfe; border-radius: 20px; padding: 48px; }
+.opco-block h3 { font-size: 1.4rem; color: var(--navy); margin-bottom: 16px; font-family: var(--serif); font-weight: 500; }
+.opco-steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; margin-top: 32px; }
+.opco-step { text-align: center; }
+.opco-step-num { width: 40px; height: 40px; border-radius: 50%; background: var(--blue); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; margin: 0 auto 12px; font-size: 0.95rem; }
+.opco-step-title { font-weight: 600; color: var(--navy); font-size: 0.9rem; margin-bottom: 4px; }
+.opco-step-desc { font-size: 0.82rem; color: var(--text-mid); }
+
+/* ── METHODE PAGE ── */
+.methode-pilier { padding: 72px 0; border-bottom: 1px solid var(--border); }
+.methode-pilier:last-of-type { border-bottom: none; }
+.methode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center; }
+.methode-grid.reverse { direction: rtl; }
+.methode-grid.reverse > * { direction: ltr; }
+.methode-num { font-family: var(--serif); font-size: 1rem; font-weight: 700; color: var(--blue); letter-spacing: 0.06em; margin-bottom: 8px; }
+.methode-visual {
+  background: var(--offwhite); border-radius: 20px; aspect-ratio: 4/3;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); overflow: hidden; position: relative;
+}
+.methode-schema { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+
+/* Engagements */
+.engagements { background: var(--navy); padding: 64px 0; }
+.engagements-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 24px; margin-top: 48px; }
+.engagement-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 28px 24px; }
+.engagement-icon { font-size: 1.6rem; margin-bottom: 12px; }
+.engagement-title { font-weight: 600; color: var(--white); margin-bottom: 6px; font-size: 0.95rem; }
+.engagement-desc { font-size: 0.82rem; color: rgba(255,255,255,0.45); line-height: 1.6; }
+
+/* Audit link */
+.audit-link-block { background: var(--offwhite); border: 1px solid var(--border); border-radius: 16px; padding: 32px 36px; display: flex; align-items: center; justify-content: space-between; gap: 32px; margin-top: 48px; }
+.audit-link-text h3 { color: var(--navy); margin-bottom: 6px; }
+.audit-link-text p { font-size: 0.9rem; margin: 0; }
+
+/* ── AUDIT PAGE ── */
+.audit-hero {
+  background: var(--navy); padding: 96px 0 80px;
+  background-image: radial-gradient(ellipse 60% 60% at 30% 50%, rgba(239,68,68,0.08) 0%, transparent 60%),
+                    radial-gradient(ellipse 40% 40% at 80% 30%, rgba(29,78,216,0.15) 0%, transparent 60%);
+}
+.audit-hero-tag { background: rgba(239,68,68,0.15); color: #fca5a5; border-color: rgba(239,68,68,0.2); }
+.audit-axes { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; margin-top: 64px; }
+.audit-axe { background: var(--white); padding: 48px 36px; }
+.audit-axe-num { font-family: var(--serif); font-size: 3rem; font-weight: 700; color: var(--blue-pale); line-height: 1; margin-bottom: 4px; }
+.audit-axe h3 { font-size: 1.1rem; color: var(--navy); margin-bottom: 12px; }
+.audit-axe-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 20px; }
+.audit-tag { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; background: var(--blue-pale); color: var(--blue); border-radius: 4px; padding: 3px 8px; }
+.audit-livrable { background: var(--offwhite); border: 1px solid var(--border); border-radius: 20px; padding: 48px; margin-top: 0; }
+.audit-livrable-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 24px; margin-top: 32px; }
+.livrable-item { display: flex; gap: 16px; }
+.livrable-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--blue); flex-shrink: 0; margin-top: 8px; }
+.livrable-item-title { font-weight: 600; color: var(--navy); font-size: 0.95rem; margin-bottom: 4px; }
+.livrable-item-desc { font-size: 0.85rem; color: var(--text-mid); }
+.audit-cta { background: var(--navy); padding: 80px 0; text-align: center; }
+.audit-cta h2 { color: var(--white); max-width: 600px; margin: 0 auto 16px; }
+.audit-cta p { color: rgba(255,255,255,0.5); margin: 0 auto 36px; max-width: 500px; }
+
+/* ── RESSOURCES PAGE ── */
+.guide-block { background: linear-gradient(135deg, var(--navy) 0%, #152642 100%); border-radius: 24px; padding: 56px; display: grid; grid-template-columns: 1fr 280px; gap: 48px; align-items: center; color: white; }
+.guide-block h3 { font-family: var(--serif); font-size: 1.6rem; font-weight: 500; margin-bottom: 12px; }
+.guide-block p { color: rgba(255,255,255,0.55); }
+.guide-visual { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; aspect-ratio: 3/4; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+.guide-visual-icon { font-size: 3rem; }
+.guide-visual-label { font-size: 0.75rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.1em; }
+.articles-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; margin-top: 24px; }
+.article-card { border: 1px solid var(--border); border-radius: 12px; padding: 28px; transition: border-color .2s, box-shadow .2s; cursor: pointer; }
+.article-card:hover { border-color: var(--blue); box-shadow: 0 8px 24px rgba(29,78,216,0.08); }
+.article-tag { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue); margin-bottom: 10px; }
+.article-card h3 { font-size: 0.98rem; color: var(--navy); margin-bottom: 8px; line-height: 1.4; }
+.article-card p { font-size: 0.83rem; }
+.article-date { font-size: 0.75rem; color: var(--text-light); margin-top: 16px; }
+
+/* ── CONTACT PAGE ── */
+.contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; padding: 80px 0; }
+.contact-promise h2 { margin-bottom: 20px; }
+.contact-promise p { margin-bottom: 24px; }
+.contact-items { margin-top: 40px; display: flex; flex-direction: column; gap: 20px; }
+.contact-item { display: flex; gap: 16px; }
+.contact-item-icon { width: 44px; height: 44px; border-radius: 10px; background: var(--blue-pale); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.contact-item-title { font-weight: 600; color: var(--navy); font-size: 0.9rem; margin-bottom: 2px; }
+.contact-item-desc { font-size: 0.85rem; color: var(--text-mid); }
+.contact-form { background: var(--offwhite); border: 1px solid var(--border); border-radius: 20px; padding: 40px; }
+.form-group { margin-bottom: 20px; }
+label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+input, select, textarea {
+  width: 100%; padding: 12px 16px;
+  border: 1.5px solid var(--border); border-radius: 10px;
+  font-family: var(--sans); font-size: 0.9rem; color: var(--text);
+  background: var(--white); transition: border-color .2s;
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--blue); }
+textarea { resize: vertical; min-height: 100px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-submit { width: 100%; margin-top: 8px; justify-content: center; font-size: 1rem; padding: 16px; }
+.form-note { font-size: 0.75rem; color: var(--text-light); text-align: center; margin-top: 12px; }
+
+/* ── FOOTER ── */
+footer { background: #060e1a; padding: 64px 0 32px; }
+.footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; padding-bottom: 48px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.footer-brand .logo-mark { font-size: 1.2rem; }
+.footer-brand-desc { font-size: 0.83rem; color: rgba(255,255,255,0.35); margin-top: 12px; line-height: 1.7; max-width: 280px; }
+.footer-col-title { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 20px; }
+.footer-col a { display: block; color: rgba(255,255,255,0.55); font-size: 0.87rem; text-decoration: none; margin-bottom: 10px; transition: color .2s; cursor: pointer; }
+.footer-col a:hover { color: var(--white); }
+.footer-bottom { display: flex; justify-content: space-between; align-items: center; padding-top: 28px; }
+.footer-bottom-left { font-size: 0.8rem; color: rgba(255,255,255,0.25); }
+.footer-bottom-right { display: flex; gap: 24px; }
+.footer-bottom-right a { font-size: 0.8rem; color: rgba(255,255,255,0.25); text-decoration: none; cursor: pointer; }
+.footer-bottom-right a:hover { color: rgba(255,255,255,0.5); }
+
+/* ── SECTION HEADERS ── */
+.section-header { margin-bottom: 56px; }
+.section-header .tag { margin-bottom: 16px; }
+.section-header h2 { margin-bottom: 16px; }
+.section-header p { max-width: 580px; }
+.section-header.centered { text-align: center; }
+.section-header.centered p { margin: 0 auto; }
+
+/* ── INLINE FORM (hero) ── */
+.hero-form { display: flex; gap: 0; max-width: 440px; }
+.hero-form input {
+  flex: 1; padding: 14px 18px; border: none; border-radius: 10px 0 0 10px;
+  font-size: 0.9rem; background: rgba(255,255,255,0.1); color: white;
+  border: 1px solid rgba(255,255,255,0.15); border-right: none;
+}
+.hero-form input::placeholder { color: rgba(255,255,255,0.4); }
+.hero-form .btn { border-radius: 0 10px 10px 0; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .hero-inner, .page-hero .container, .formule-detail-grid,
+  .methode-grid, .guide-block, .contact-grid, .footer-top { grid-template-columns: 1fr; gap: 40px; }
+  .douleurs-grid, .formules-grid, .piliers-grid, .audit-axes,
+  .articles-grid, .opco-steps, .engagements-grid { grid-template-columns: 1fr; }
+  .audit-axes { grid-template-columns: 1fr; }
+  .stat-band-inner { grid-template-columns: 1fr; gap: 32px; }
+  .stat-band-divider { display: none; }
+  .audit-livrable-grid { grid-template-columns: 1fr; }
+  nav a:not(.btn-nav) { display: none; }
+  .hero-card { display: none; }
+  .methode-grid.reverse { direction: ltr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="header-inner">
+    <a class="logo" onclick="showPage('home')">
+      <div>
+        <div class="logo-mark">H<span>A</span>NIBAL</div>
+        <span class="logo-sub">Agence de Ressources Agentiques</span>
+      </div>
+    </a>
+    <nav>
+      <a onclick="showPage('coaching')" id="nav-coaching">Coaching</a>
+      <a onclick="showPage('methode')" id="nav-methode">Méthode</a>
+      <a onclick="showPage('ressources')" id="nav-ressources">Ressources</a>
+      <a onclick="showPage('contact')" class="btn-nav">Diagnostic gratuit</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ══ PAGE : HOME ══ -->
+<div id="page-home" class="page active">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-inner">
+        <div>
+          <div class="hero-label">
+            <span class="tag tag-dark">Coaching dirigeant · Éligible OPCO</span>
+          </div>
+          <h1>Prenez le virage<br>de l'IA.<br><em>Sans perdre le contrôle.</em></h1>
+          <p class="hero-sub">Hanibal accompagne les dirigeants et managers B2B pour structurer leur transition IA — avec méthode, un cadre solide, et une attention constante au facteur humain.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" onclick="showPage('contact')">Réserver mon diagnostic gratuit</a>
+            <a class="btn btn-outline" onclick="showPage('coaching')">Découvrir l'accompagnement</a>
+          </div>
+          <p class="hero-note">1h · gratuit · sans engagement · en grande partie finançable OPCO</p>
+        </div>
+        <div class="hero-card">
+          <div class="hero-stat">
+            <div class="hero-stat-num">95%</div>
+            <div class="hero-stat-label">des projets IA échouent à passer à l'échelle — par manque de gouvernance</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-num">3→9</div>
+            <div class="hero-stat-label">mois de coaching, en grande partie finançable par votre OPCO</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-num">2–3</div>
+            <div class="hero-stat-label">cas d'usage prioritaires identifiés dès la première session</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Douleurs -->
+  <section class="section" style="padding-bottom:0;">
+    <div class="container">
+      <div class="section-header">
+        <div class="tag">Le constat</div>
+        <h2>L'IA est là.<br>Êtes-vous vraiment aux commandes&nbsp;?</h2>
+        <p>Les dirigeants et managers B2B font face à trois défis simultanés — rarement formulés ensemble, jamais traités ensemble.</p>
+      </div>
+    </div>
+    <div class="douleurs-grid">
+      <div class="douleur">
+        <div class="douleur-num">01 · Paralysie</div>
+        <h3>Par où commencer sans risquer un investissement raté&nbsp;?</h3>
+        <p>Face à la multitude d'outils, vous testez, comparez, reportez. Pendant ce temps, vos concurrents avancent — et vos équipes attendent une direction.</p>
+      </div>
+      <div class="douleur">
+        <div class="douleur-num">02 · Shadow AI</div>
+        <h3>Vos collaborateurs utilisent déjà des IA — non sécurisées.</h3>
+        <p>Données clients copiées dans ChatGPT, mots de passe partagés, prompts envoyés en clair. Vous n'avez ni cadre, ni visibilité, ni recours légal en cas d'incident.</p>
+      </div>
+      <div class="douleur">
+        <div class="douleur-num">03 · Résistance</div>
+        <h3>Les équipes craignent pour leur emploi. Les managers s'épuisent.</h3>
+        <p>Sans direction claire, l'IA cristallise les inquiétudes plutôt que de les dissoudre. La technologie n'est pas le problème&nbsp;: c'est l'absence d'un cap collectif.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quote -->
+  <div class="quote-block">
+    <div class="container">
+      <div class="quote-inner">
+        <div class="quote-text">
+          "L'IA n'est pas qu'un outil informatique — c'est <em>un défi d'ingénierie sociale.</em> Vous avez besoin d'un guide, pas d'un vendeur de logiciels."
+        </div>
+        <div class="quote-source">Conviction fondatrice · Hanibal</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Piliers -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <div class="tag">Notre approche</div>
+        <h2>Le succès de l'IA<br>passe avant tout par l'humain.</h2>
+        <p>La technologie seule ne transforme pas une organisation. Notre priorité&nbsp;: équiper vos dirigeants pour qu'ils décident, supervisent et arbitrent en toute autonomie.</p>
+      </div>
+      <div class="piliers-grid">
+        <div class="pilier">
+          <div class="pilier-num">01</div>
+          <h3>Vision</h3>
+          <p>Démystifier les concepts pour auditer vos prestataires et décider sans dépendre d'un expert externe. Vous reprenez la main sur vos choix technologiques.</p>
+        </div>
+        <div class="pilier">
+          <div class="pilier-num">02</div>
+          <h3>Management</h3>
+          <p>Superviser des équipes hybrides combinant collaborateurs humains et agents algorithmiques autonomes. Un nouveau mode de gouvernance à maîtriser.</p>
+        </div>
+        <div class="pilier">
+          <div class="pilier-num">03</div>
+          <h3>Terrain</h3>
+          <p>Lever les blocages internes, réduire l'anxiété des équipes, favoriser l'adoption réelle. Sessions sur site, avec vos managers et vos équipes opérationnelles.</p>
+        </div>
+        <div class="pilier">
+          <div class="pilier-num">04</div>
+          <h3>Posture</h3>
+          <p>Arbitrer dans l'incertitude — apprendre à décider sans tout savoir, organiser l'apprentissage collectif, et maintenir un cap quand les outils évoluent chaque semaine.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Formules aperçu -->
+  <section class="section" style="background:var(--offwhite); border-top:1px solid var(--border);">
+    <div class="container">
+      <div class="section-header centered">
+        <div class="tag">L'accompagnement</div>
+        <h2>Un coaching calibré<br>sur votre maturité.</h2>
+        <p>Trois formules progressives, en grande partie éligibles au financement OPCO.</p>
+      </div>
+      <div class="formules-grid">
+        <div class="formule-card" onclick="showPage('coaching')">
+          <div class="formule-duree">3 mois</div>
+          <h3>Cadrage dirigeant</h3>
+          <p style="font-size:.88rem;">Posture, vision, identification et validation de votre premier cas d'usage IA à ROI rapide.</p>
+          <ul style="font-size:.83rem;color:var(--text-mid);margin-top:16px;padding-left:16px;line-height:2;">
+            <li>Audit des processus actuels</li>
+            <li>Feuille de route 6 mois</li>
+            <li>Accompagnement décisionnel</li>
+          </ul>
+          <div class="formule-opco"><strong>Eligible OPCO</strong> · Financement partiel ou total</div>
+        </div>
+        <div class="formule-card featured" onclick="showPage('coaching')">
+          <div class="formule-badge">Recommandé</div>
+          <div class="formule-duree">6 mois</div>
+          <h3>Transformation pilotée</h3>
+          <p style="font-size:.88rem;">Gouvernance, équipes, 2 à 3 cas d'usage en production. Vous repartez avec un cadre documenté pour superviser vos agents IA.</p>
+          <ul style="font-size:.83rem;color:var(--text-mid);margin-top:16px;padding-left:16px;line-height:2;">
+            <li>Cadre de gouvernance IA</li>
+            <li>Ateliers équipes sur site</li>
+            <li>Agents IA en production</li>
+          </ul>
+          <div class="formule-opco"><strong>Eligible OPCO</strong> · Financement partiel ou total</div>
+        </div>
+        <div class="formule-card" onclick="showPage('coaching')">
+          <div class="formule-duree">9 mois</div>
+          <h3>Trajectoire complète</h3>
+          <p style="font-size:.88rem;">Refonte des processus, industrialisation, montée en autonomie durable. L'organisation pilote son IA en continu.</p>
+          <ul style="font-size:.83rem;color:var(--text-mid);margin-top:16px;padding-left:16px;line-height:2;">
+            <li>Transformation organisationnelle</li>
+            <li>Indicateurs de pilotage IA</li>
+            <li>Autonomie progressive</li>
+          </ul>
+          <div class="formule-opco"><strong>Eligible OPCO</strong> · Financement partiel ou total</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stat band -->
+  <div class="stat-band">
+    <div class="container">
+      <div class="stat-band-inner">
+        <div class="stat-band-item">
+          <div class="stat-band-num">95%</div>
+          <div class="stat-band-label">des projets IA n'échouent pas à cause de la technologie.<br>Ils échouent par manque de préparation humaine et de gouvernance.</div>
+          <div class="stat-band-source">Source · Gartner 2024 · MIT Sloan 2025</div>
+        </div>
+        <div class="stat-band-divider"></div>
+        <div class="stat-band-item" style="text-align:center;">
+          <p style="font-size:1.05rem;color:var(--text);max-width:480px;margin:0 auto 24px;">Ne faites pas partie des&nbsp;95&nbsp;%. Structurez votre transition IA avec méthode, avec un cadre, avec les bonnes personnes.</p>
+          <a class="btn btn-primary" onclick="showPage('contact')">Réserver mon diagnostic gratuit</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /home -->
+
+
+<!-- ══ PAGE : COACHING ══ -->
+<div id="page-coaching" class="page">
+
+  <div class="page-hero">
+    <div class="container">
+      <div>
+        <div class="tag tag-dark" style="margin-bottom:20px;">Coaching dirigeant · Éligible OPCO</div>
+        <h1 style="color:white;">L'accompagnement<br><em style="color:var(--blue-light);font-style:italic;">qui change la trajectoire.</em></h1>
+        <p>Un coaching ancré dans votre réalité métier — pas une formation standard, pas un audit technique. Un travail de fond sur votre posture, votre organisation, et vos cas d'usage concrets.</p>
+      </div>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="container">
+
+      <!-- Formule 1 -->
+      <div class="formule-detail">
+        <div class="formule-detail-grid">
+          <div>
+            <div class="formule-detail-num">3</div>
+            <div class="formule-detail-tag">Cadrage dirigeant · 3 mois</div>
+            <h2>Poser les bases.<br>Choisir le bon cap.</h2>
+            <p class="formule-detail-desc">Vous avez compris que l'IA va transformer votre secteur — mais vous ne savez pas par où commencer sans risquer un investissement raté. Ce programme de 3 mois vous donne une vision claire, un premier cas d'usage validé, et une feuille de route réaliste.</p>
+            <p>Idéal pour les dirigeants qui découvrent l'IA ou qui veulent sortir de l'expérimentation dispersée pour construire une stratégie cohérente.</p>
+          </div>
+          <div class="formule-detail-side">
+            <div class="detail-item">
+              <div class="detail-icon">📅</div>
+              <div>
+                <div class="detail-item-label">Rythme</div>
+                <div class="detail-item-value">2 sessions par mois · 1h30 chacune</div>
+              </div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-icon">🎯</div>
+              <div>
+                <div class="detail-item-label">Focus</div>
+                <div class="detail-item-value">Posture dirigeant · Vision IA · 1er cas d'usage</div>
+              </div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-icon">👥</div>
+              <div>
+                <div class="detail-item-label">Format</div>
+                <div class="detail-item-value">Individuel ou binôme dirigeant–DRH</div>
+              </div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-icon">📍</div>
+              <div>
+                <div class="detail-item-label">Lieu</div>
+                <div class="detail-item-value">À distance ou sur site (France entière)</div>
+              </div>
+            </div>
+            <div class="livrable-box">
+              <div class="livrable-box-label">Livrable final</div>
+              <div class="livrable-box-value">Feuille de route IA 6 mois · Cas d'usage priorisé · Critères d'évaluation</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formule 2 -->
+      <div class="formule-detail">
+        <div class="formule-detail-grid" style="grid-template-columns:1fr 1fr;">
+          <div class="formule-detail-side">
+            <div class="detail-item">
+              <div class="detail-icon">📅</div>
+              <div>
+                <div class="detail-item-label">Rythme</div>
+                <div class="detail-item-value">2 sessions/mois + ateliers équipes trimestriels</div>
+              </div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-icon">🎯</div>
+              <div>
+                <div class="detail-item-label">Focus</div>
+                <div class="detail-item-value">Gouvernance · Équipes · 2–3 cas en production</div>
+              </div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-icon">👥</div>
+              <div>
+                <div class="detail-item-label">Format</div>
+                <div class="detail-item-value">Dirigeant + comité de direction + équipes</div>
+              </div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-icon">⚖️</div>
+              <div>
+                <div class="detail-item-label">Conformité</div>
+                <div class="detail-item-value">RGPD · AI Act · Supervision humaine</div>
+              </div>
+            </div>
+            <div class="livrable-box">
+              <div class="livrable-box-label">Livrable final</div>
+              <div class="livrable-box-value">Cadre de gouvernance documenté · 2–3 agents IA en production · Registre de traitement IA</div>
+            </div>
+          </div>
+          <div>
+            <div class="formule-detail-num">6</div>
+            <div class="formule-detail-tag" style="display:flex;align-items:center;gap:8px;">Transformation pilotée · 6 mois <span style="background:var(--blue);color:white;font-size:.65rem;padding:3px 8px;border-radius:100px;">Recommandé</span></div>
+            <h2>Transformer.<br>Avec méthode.</h2>
+            <p class="formule-detail-desc">Vous avez un premier cap — maintenant il faut embarquer les équipes, sécuriser les usages, et passer à la production. Ce programme de 6 mois structure votre gouvernance IA et met vos premiers agents en route dans des conditions maîtrisées.</p>
+            <p>Idéal pour les organisations prêtes à aller au-delà de l'expérimentation et à déployer l'IA dans leurs processus métier avec un cadre solide.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formule 3 -->
+      <div class="formule-detail">
+        <div class="formule-detail-grid">
+          <div>
+            <div class="formule-detail-num">9</div>
+            <div class="formule-detail-tag">Trajectoire complète · 9 mois</div>
+            <h2>Industrialiser.<br>Durer.</h2>
+            <p class="formule-detail-desc">L'IA n'est plus un projet — c'est une composante permanente de votre organisation. Ce programme de 9 mois refond vos processus, construit vos indicateurs de pilotage, et vous rend autonome dans la durée.</p>
+            <p>Idéal pour les organisations en transformation profonde, avec des enjeux de conformité réglementaire, de gestion des données, ou de déploiement multi-équipes.</p>
+          </div>
+          <div class="formule-detail-side">
+            <div class="detail-item">
+              <div class="detail-icon">📅</div>
+              <div>
+                <div class="detail-item-label">Rythme</div>
+                <div class="detail-item-value">Accompagnement hebdomadaire · Ateliers mensuels</div>
+              </div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-icon">🎯</div>
+              <div>
+                <div class="detail-item-label">Focus</div>
+                <div class="detail-item-value">Refonte processus · Industrialisation · Autonomie</div>
+              </div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-icon">📊</div>
+              <div>
+                <div class="detail-item-label">Pilotage</div>
+                <div class="detail-item-value">Tableau de bord IA · KPIs partagés · Revues trimestrielles</div>
+              </div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-icon">⚖️</div>
+              <div>
+                <div class="detail-item-label">Conformité</div>
+                <div class="detail-item-value">RGPD complet · AI Act · Audit interne continu</div>
+              </div>
+            </div>
+            <div class="livrable-box">
+              <div class="livrable-box-label">Livrable final</div>
+              <div class="livrable-box-value">Organisation IA autonome · Tableau de bord · Processus refondus · Documentation complète</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- OPCO -->
+      <div class="opco-block" style="margin-top:64px;">
+        <span class="tag" style="margin-bottom:16px;">Financement OPCO</span>
+        <h3>Nos parcours sont en grande partie pris en charge par votre OPCO.</h3>
+        <p style="color:var(--text-mid);">En tant qu'organisme certifié Datadock, nos formations sont éligibles aux financements OPCO. Nous vous accompagnons dans les démarches administratives — vous n'avez pas à vous en préoccuper.</p>
+        <div class="opco-steps">
+          <div class="opco-step">
+            <div class="opco-step-num">1</div>
+            <div class="opco-step-title">Diagnostic gratuit</div>
+            <div class="opco-step-desc">On définit ensemble la formule adaptée et on vérifie votre éligibilité OPCO</div>
+          </div>
+          <div class="opco-step">
+            <div class="opco-step-num">2</div>
+            <div class="opco-step-title">Montage du dossier</div>
+            <div class="opco-step-desc">Hanibal prépare et soumet le dossier de financement pour vous</div>
+          </div>
+          <div class="opco-step">
+            <div class="opco-step-num">3</div>
+            <div class="opco-step-title">Démarrage</div>
+            <div class="opco-step-desc">Le programme démarre une fois le financement validé — souvent sous 3 à 4 semaines</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-top:56px;">
+        <a class="btn btn-primary" onclick="showPage('contact')">Réserver mon diagnostic gratuit — 1h · sans engagement</a>
+      </div>
+
+    </div>
+  </section>
+</div><!-- /coaching -->
+
+
+<!-- ══ PAGE : METHODE ══ -->
+<div id="page-methode" class="page">
+
+  <div class="page-hero">
+    <div class="container">
+      <div style="max-width:640px;">
+        <div class="tag tag-dark" style="margin-bottom:20px;">Notre méthode</div>
+        <h1 style="color:white;">Trois piliers.<br><em style="color:var(--blue-light);font-style:italic;">Une transformation durable.</em></h1>
+        <p>La méthode Hanibal ne vend pas d'outils. Elle structure une transformation humaine et organisationnelle, outillée par l'IA — dans un cadre documenté, sécurisé, et auditable.</p>
+      </div>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="container">
+
+      <!-- Pilier 1 -->
+      <div class="methode-pilier">
+        <div class="methode-grid">
+          <div>
+            <div class="methode-num">Pilier 01 — Priorisation</div>
+            <h2>L'IA Canvas.<br>Identifier ce qui compte vraiment.</h2>
+            <p style="margin-bottom:20px;">Avant de déployer quoi que ce soit, nous identifions ensemble les 2 ou 3 cas d'usage qui généreront un retour sur investissement rapide et mesurable. Pas de POC pour la forme, pas de bruit parasite.</p>
+            <p>L'IA Canvas est un atelier structuré qui cartographie vos processus, évalue leur potentiel de transformation, et produit une priorisation argumentée — que vous pouvez défendre devant votre comité de direction.</p>
+            <ul style="margin-top:24px;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:10px;">
+              <li style="display:flex;gap:12px;font-size:.9rem;"><span style="color:var(--blue);font-weight:700;">→</span> Audit des processus existants</li>
+              <li style="display:flex;gap:12px;font-size:.9rem;"><span style="color:var(--blue);font-weight:700;">→</span> Priorisation par ROI réel et faisabilité</li>
+              <li style="display:flex;gap:12px;font-size:.9rem;"><span style="color:var(--blue);font-weight:700;">→</span> Feuille de route 6 mois actionnelle</li>
+            </ul>
+          </div>
+          <div class="methode-visual" style="background:var(--navy);">
+            <svg viewBox="0 0 360 270" xmlns="http://www.w3.org/2000/svg" style="width:90%;height:90%;padding:20px;">
+              <rect x="20" y="20" width="100" height="70" rx="8" fill="none" stroke="rgba(59,130,246,0.3)" stroke-width="1.5"/>
+              <text x="70" y="52" font-family="Plus Jakarta Sans" font-size="9" fill="rgba(255,255,255,0.5)" text-anchor="middle">Processus</text>
+              <text x="70" y="66" font-family="Plus Jakarta Sans" font-size="9" fill="rgba(255,255,255,0.5)" text-anchor="middle">actuels</text>
+              <rect x="140" y="20" width="100" height="70" rx="8" fill="none" stroke="rgba(59,130,246,0.3)" stroke-width="1.5"/>
+              <text x="190" y="52" font-family="Plus Jakarta Sans" font-size="9" fill="rgba(255,255,255,0.5)" text-anchor="middle">Potentiel</text>
+              <text x="190" y="66" font-family="Plus Jakarta Sans" font-size="9" fill="rgba(255,255,255,0.5)" text-anchor="middle">IA</text>
+              <rect x="260" y="20" width="80" height="70" rx="8" fill="none" stroke="rgba(59,130,246,0.3)" stroke-width="1.5"/>
+              <text x="300" y="52" font-family="Plus Jakarta Sans" font-size="9" fill="rgba(255,255,255,0.5)" text-anchor="middle">ROI</text>
+              <text x="300" y="66" font-family="Plus Jakarta Sans" font-size="9" fill="rgba(255,255,255,0.5)" text-anchor="middle">estimé</text>
+              <line x1="120" y1="55" x2="140" y2="55" stroke="rgba(59,130,246,0.4)" stroke-width="1.5" marker-end="url(#arr)"/>
+              <line x1="240" y1="55" x2="260" y2="55" stroke="rgba(59,130,246,0.4)" stroke-width="1.5"/>
+              <rect x="60" y="140" width="240" height="50" rx="10" fill="rgba(29,78,216,0.25)" stroke="rgba(59,130,246,0.5)" stroke-width="1.5"/>
+              <text x="180" y="162" font-family="Plus Jakarta Sans" font-size="10" fill="rgba(255,255,255,0.8)" text-anchor="middle" font-weight="600">2–3 cas d'usage prioritaires</text>
+              <text x="180" y="178" font-family="Plus Jakarta Sans" font-size="9" fill="rgba(255,255,255,0.4)" text-anchor="middle">Feuille de route 6 mois</text>
+              <line x1="180" y1="90" x2="180" y2="140" stroke="rgba(59,130,246,0.4)" stroke-width="1.5" stroke-dasharray="4,3"/>
+              <rect x="90" y="210" width="180" height="40" rx="8" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+              <text x="180" y="234" font-family="Plus Jakarta Sans" font-size="9" fill="rgba(255,255,255,0.3)" text-anchor="middle">→ Décision comité de direction</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pilier 2 -->
+      <div class="methode-pilier">
+        <div class="methode-grid reverse">
+          <div class="methode-visual" style="background:var(--navy);">
+            <svg viewBox="0 0 360 270" xmlns="http://www.w3.org/2000/svg" style="width:90%;height:90%;padding:20px;">
+              <circle cx="180" cy="135" r="60" fill="none" stroke="rgba(59,130,246,0.2)" stroke-width="1.5" stroke-dasharray="6,4"/>
+              <circle cx="180" cy="135" r="40" fill="none" stroke="rgba(59,130,246,0.35)" stroke-width="1.5"/>
+              <circle cx="180" cy="135" r="20" fill="rgba(29,78,216,0.3)" stroke="rgba(59,130,246,0.6)" stroke-width="1.5"/>
+              <text x="180" y="139" font-family="Plus Jakarta Sans" font-size="8" fill="rgba(255,255,255,0.8)" text-anchor="middle" font-weight="600">Agent IA</text>
+              <text x="180" y="54" font-family="Plus Jakarta Sans" font-size="8" fill="rgba(255,255,255,0.45)" text-anchor="middle">RGPD</text>
+              <text x="246" y="110" font-family="Plus Jakarta Sans" font-size="8" fill="rgba(255,255,255,0.45)" text-anchor="middle">AI Act</text>
+              <text x="246" y="162" font-family="Plus Jakarta Sans" font-size="8" fill="rgba(255,255,255,0.45)" text-anchor="middle">Kill Switch</text>
+              <text x="180" y="218" font-family="Plus Jakarta Sans" font-size="8" fill="rgba(255,255,255,0.45)" text-anchor="middle">Supervision humaine</text>
+              <text x="114" y="162" font-family="Plus Jakarta Sans" font-size="8" fill="rgba(255,255,255,0.45)" text-anchor="middle">Traçabilité</text>
+              <text x="114" y="110" font-family="Plus Jakarta Sans" font-size="8" fill="rgba(255,255,255,0.45)" text-anchor="middle">Garde-fous</text>
+            </svg>
+          </div>
+          <div>
+            <div class="methode-num">Pilier 02 — Gouvernance</div>
+            <h2>Un cadre.<br>Avant de déployer quoi que ce soit.</h2>
+            <p style="margin-bottom:20px;">Déployer des agents IA sans gouvernance, c'est construire sur du sable. Nous structurons votre cadre de supervision humaine, votre registre de traitement IA, et vos indicateurs de performance — en conformité avec le RGPD et l'AI Act.</p>
+            <p>Cette couche de gouvernance n'est pas une contrainte administrative. C'est ce qui vous permettra, le moment venu, d'expliquer à un client, un partenaire ou un régulateur exactement ce que font vos IA — et pourquoi vous leur faites confiance.</p>
+            <ul style="margin-top:24px;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:10px;">
+              <li style="display:flex;gap:12px;font-size:.9rem;"><span style="color:var(--blue);font-weight:700;">→</span> Cadre de supervision humaine documenté</li>
+              <li style="display:flex;gap:12px;font-size:.9rem;"><span style="color:var(--blue);font-weight:700;">→</span> Registre des traitements IA (RGPD Art. 30)</li>
+              <li style="display:flex;gap:12px;font-size:.9rem;"><span style="color:var(--blue);font-weight:700;">→</span> Conformité AI Act · Gestion des risques continue</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pilier 3 -->
+      <div class="methode-pilier">
+        <div class="methode-grid">
+          <div>
+            <div class="methode-num">Pilier 03 — Déploiement</div>
+            <h2>Des agents responsables.<br>Prêts à travailler.</h2>
+            <p style="margin-bottom:20px;">Lorsque votre organisation est prête, nous accompagnons le déploiement d'agents IA supervisés — intégrés à vos flux de travail existants, encadrés par une gouvernance solide, et maintenus dans le temps.</p>
+            <p>Pas de logiciel à acheter, pas d'infrastructure à gérer. Des agents pré-configurés pour vos cas d'usage, opérationnels sous 8 semaines, avec une supervision incluse.</p>
+            <ul style="margin-top:24px;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:10px;">
+              <li style="display:flex;gap:12px;font-size:.9rem;"><span style="color:var(--blue);font-weight:700;">→</span> Agents assistants RH, reporting, qualification commerciale</li>
+              <li style="display:flex;gap:12px;font-size:.9rem;"><span style="color:var(--blue);font-weight:700;">→</span> Mise en service sous 8 semaines</li>
+              <li style="display:flex;gap:12px;font-size:.9rem;"><span style="color:var(--blue);font-weight:700;">→</span> Supervision et maintenance continues</li>
+            </ul>
+          </div>
+          <div class="methode-visual" style="background:var(--offwhite);border:1px solid var(--border);">
+            <svg viewBox="0 0 360 270" xmlns="http://www.w3.org/2000/svg" style="width:90%;height:90%;padding:20px;">
+              <rect x="130" y="20" width="100" height="40" rx="8" fill="var(--navy)" opacity=".9"/>
+              <text x="180" y="45" font-family="Plus Jakarta Sans" font-size="9" fill="white" text-anchor="middle" font-weight="600">Vos processus</text>
+              <line x1="180" y1="60" x2="180" y2="80" stroke="rgba(29,78,216,0.4)" stroke-width="1.5" stroke-dasharray="4,3"/>
+              <rect x="60" y="80" width="100" height="40" rx="8" fill="rgba(29,78,216,0.12)" stroke="rgba(29,78,216,0.3)" stroke-width="1.5"/>
+              <text x="110" y="105" font-family="Plus Jakarta Sans" font-size="9" fill="var(--blue)" text-anchor="middle" font-weight="600">Agent RH</text>
+              <rect x="200" y="80" width="100" height="40" rx="8" fill="rgba(29,78,216,0.12)" stroke="rgba(29,78,216,0.3)" stroke-width="1.5"/>
+              <text x="250" y="105" font-family="Plus Jakarta Sans" font-size="9" fill="var(--blue)" text-anchor="middle" font-weight="600">Agent Reporting</text>
+              <line x1="140" y1="60" x2="110" y2="80" stroke="rgba(29,78,216,0.3)" stroke-width="1.5"/>
+              <line x1="220" y1="60" x2="250" y2="80" stroke="rgba(29,78,216,0.3)" stroke-width="1.5"/>
+              <rect x="100" y="160" width="160" height="40" rx="8" fill="rgba(16,185,129,0.12)" stroke="rgba(16,185,129,0.35)" stroke-width="1.5"/>
+              <text x="180" y="185" font-family="Plus Jakarta Sans" font-size="9" fill="rgb(16,185,129)" text-anchor="middle" font-weight="600">✓ Supervision humaine active</text>
+              <line x1="110" y1="120" x2="160" y2="160" stroke="rgba(29,78,216,0.2)" stroke-width="1" stroke-dasharray="3,3"/>
+              <line x1="250" y1="120" x2="200" y2="160" stroke="rgba(29,78,216,0.2)" stroke-width="1" stroke-dasharray="3,3"/>
+              <text x="180" y="240" font-family="Plus Jakarta Sans" font-size="8" fill="var(--text-light)" text-anchor="middle">Mise en service · 8 semaines</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lien audit -->
+      <div class="audit-link-block">
+        <div class="audit-link-text">
+          <h3>Vous avez déjà des agents IA en production&nbsp;?</h3>
+          <p>Pour les organisations plus avancées, nous proposons un audit de conformité dédié — cartographie des risques, vérification RGPD et AI Act, lisibilité pour vos parties prenantes.</p>
+        </div>
+        <a class="btn btn-outline-dark" onclick="showPage('audit')" style="white-space:nowrap;flex-shrink:0;">Découvrir l'audit →</a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Engagements -->
+  <div class="engagements">
+    <div class="container">
+      <div class="section-header centered">
+        <h2 style="color:white;">Nos engagements.</h2>
+      </div>
+      <div class="engagements-grid">
+        <div class="engagement-card">
+          <div class="engagement-icon">🎓</div>
+          <div class="engagement-title">Certifié Datadock</div>
+          <div class="engagement-desc">Nos parcours sont référencés et éligibles aux financements des OPCO.</div>
+        </div>
+        <div class="engagement-card">
+          <div class="engagement-icon">🔒</div>
+          <div class="engagement-title">Confidentialité totale</div>
+          <div class="engagement-desc">Vos données, vos processus et vos cas d'usage ne sortent jamais de l'espace de travail partagé.</div>
+        </div>
+        <div class="engagement-card">
+          <div class="engagement-icon">🧭</div>
+          <div class="engagement-title">Posture conseil</div>
+          <div class="engagement-desc">Nous ne vendons pas de logiciels. Notre intérêt est aligné avec votre autonomie, pas votre dépendance.</div>
+        </div>
+        <div class="engagement-card">
+          <div class="engagement-icon">📍</div>
+          <div class="engagement-title">Fécamp · France entière</div>
+          <div class="engagement-desc">Basés en Normandie, nous intervenons partout en France — sur site ou à distance.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /methode -->
+
+
+<!-- ══ PAGE : AUDIT ══ -->
+<div id="page-audit" class="page">
+
+  <div class="audit-hero">
+    <div class="container">
+      <div style="max-width:700px;">
+        <div class="tag audit-hero-tag" style="margin-bottom:20px;">Audit de conformité · Organisations avancées</div>
+        <h1 style="color:white;">Vos algorithmes décident.<br><em style="color:#fca5a5;font-style:italic;">Savez-vous exactement comment&nbsp;?</em></h1>
+        <p style="color:rgba(255,255,255,0.55);font-size:1.05rem;margin-top:16px;">Vous avez des agents IA en production. C'est une bonne nouvelle. Mais savez-vous exactement ce qu'ils font, au nom de qui, avec quelles limites documentées — et comment vous en rendriez compte à un auditeur ou à un régulateur&nbsp;?</p>
+      </div>
+    </div>
+  </div>
+
+  <section class="section" style="padding-top:0;">
+    <div class="audit-axes">
+      <div class="audit-axe">
+        <div class="audit-axe-num">01</div>
+        <h3>Cartographie</h3>
+        <p>Quels agents sont actifs dans votre organisation&nbsp;? Quelles données traitent-ils, au nom de qui, avec quelles permissions&nbsp;? Qui en est responsable en cas d'incident&nbsp;?</p>
+        <div class="audit-axe-tags">
+          <span class="audit-tag">Inventaire agents</span>
+          <span class="audit-tag">Flux de données</span>
+          <span class="audit-tag">Responsabilités</span>
+        </div>
+      </div>
+      <div class="audit-axe">
+        <div class="audit-axe-num">02</div>
+        <h3>Conformité</h3>
+        <p>RGPD, AI Act, supervision humaine documentée. Où sont vos zones de risque juridique et réglementaire&nbsp;? Vos agents à haut risque sont-ils conformes aux obligations de l'article 9 et 14 de l'AI Act&nbsp;?</p>
+        <div class="audit-axe-tags">
+          <span class="audit-tag">RGPD Art. 30</span>
+          <span class="audit-tag">AI Act Art. 9/14</span>
+          <span class="audit-tag">Supervision humaine</span>
+        </div>
+      </div>
+      <div class="audit-axe">
+        <div class="audit-axe-num">03</div>
+        <h3>Lisibilité</h3>
+        <p>Vos agents peuvent-ils rendre des comptes — à un auditeur, à un client, à un partenaire, à un juge&nbsp;? Leur comportement est-il traçable, explicable, défendable&nbsp;?</p>
+        <div class="audit-axe-tags">
+          <span class="audit-tag">Traçabilité</span>
+          <span class="audit-tag">Explicabilité</span>
+          <span class="audit-tag">Documentation</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:0;">
+    <div class="container">
+      <div class="audit-livrable">
+        <span class="tag" style="margin-bottom:20px;">Ce que vous obtenez</span>
+        <h2>Un livrable concret.<br>Des recommandations actionnables.</h2>
+        <p style="max-width:600px;">L'audit produit une documentation claire, utilisable immédiatement — que ce soit pour votre comité de direction, votre DPO, vos équipes techniques, ou un régulateur.</p>
+        <div class="audit-livrable-grid">
+          <div class="livrable-item">
+            <div class="livrable-dot"></div>
+            <div>
+              <div class="livrable-item-title">Rapport d'audit</div>
+              <div class="livrable-item-desc">État des lieux complet de vos agents IA, de leurs flux de données, de leurs permissions et de leurs risques.</div>
+            </div>
+          </div>
+          <div class="livrable-item">
+            <div class="livrable-dot"></div>
+            <div>
+              <div class="livrable-item-title">Cartographie des risques</div>
+              <div class="livrable-item-desc">Identification et priorisation des zones de vulnérabilité — réglementaires, techniques, et organisationnelles.</div>
+            </div>
+          </div>
+          <div class="livrable-item">
+            <div class="livrable-dot"></div>
+            <div>
+              <div class="livrable-item-title">Recommandations priorisées</div>
+              <div class="livrable-item-desc">Actions concrètes classées par urgence, avec estimation d'effort et d'impact pour chacune.</div>
+            </div>
+          </div>
+          <div class="livrable-item">
+            <div class="livrable-dot"></div>
+            <div>
+              <div class="livrable-item-title">Plan de remédiation</div>
+              <div class="livrable-item-desc">Option&nbsp;: accompagnement dans la mise en œuvre des recommandations, avec jalons et indicateurs de suivi.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="audit-cta">
+    <div class="container">
+      <span class="tag tag-dark" style="margin-bottom:20px;">Mission sur mesure</span>
+      <h2>Ce type de mission se construit<br>sur votre situation.</h2>
+      <p>Pas de format standard — chaque audit est dimensionné selon la maturité de votre organisation, le nombre d'agents déployés, et vos enjeux de conformité. Parlons-en.</p>
+      <a class="btn btn-primary" href="mailto:contact@hanibal.fr">Écrire à contact@hanibal.fr</a>
+    </div>
+  </div>
+
+</div><!-- /audit -->
+
+
+<!-- ══ PAGE : RESSOURCES ══ -->
+<div id="page-ressources" class="page">
+
+  <div class="page-hero">
+    <div class="container" style="grid-template-columns:1fr;">
+      <div style="max-width:640px;">
+        <div class="tag tag-dark" style="margin-bottom:20px;">Espace dirigeants</div>
+        <h1 style="color:white;">Des ressources<br><em style="color:var(--blue-light);font-style:italic;">pour décider avec clarté.</em></h1>
+        <p>Guides pratiques, analyses de fond, et retours d'expérience — pour les dirigeants qui veulent comprendre avant d'agir.</p>
+      </div>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="container">
+
+      <!-- Guide -->
+      <div class="guide-block" style="margin-bottom:64px;">
+        <div>
+          <span class="tag tag-dark" style="margin-bottom:16px;">Guide gratuit</span>
+          <h3>Réussir sa transition IA</h3>
+          <p style="margin:12px 0 28px;">Les 7 erreurs que font les dirigeants quand ils adoptent l'IA — et comment les éviter. Un guide pratique de 24 pages, sans jargon.</p>
+          <a class="btn btn-primary" href="#">Télécharger le guide</a>
+          <p style="font-size:.78rem;color:rgba(255,255,255,0.3);margin-top:10px;">Sans inscription requise · PDF · 24 pages</p>
+        </div>
+        <div class="guide-visual">
+          <div class="guide-visual-icon">📋</div>
+          <div class="guide-visual-label">Guide PDF · 24 pages</div>
+        </div>
+      </div>
+
+      <!-- Articles -->
+      <div class="section-header">
+        <div class="tag">Analyses & points de vue</div>
+        <h2>Comprendre pour décider.</h2>
+      </div>
+      <div class="articles-grid">
+        <div class="article-card">
+          <div class="article-tag">Shadow AI</div>
+          <h3>Vos équipes utilisent ChatGPT. C'est votre problème, pas le leur.</h3>
+          <p>Comment structurer une politique IA interne qui protège l'organisation sans bloquer l'innovation.</p>
+          <div class="article-date">Mai 2026 · 8 min de lecture</div>
+        </div>
+        <div class="article-card">
+          <div class="article-tag">Réglementation</div>
+          <h3>AI Act : ce que les dirigeants doivent vraiment retenir (et ce qu'ils peuvent ignorer).</h3>
+          <p>Un tour d'horizon pragmatique de l'AI Act, écrit pour des non-juristes qui ont autre chose à faire.</p>
+          <div class="article-date">Avril 2026 · 12 min de lecture</div>
+        </div>
+        <div class="article-card">
+          <div class="article-tag">Management</div>
+          <h3>Équipes hybrides : quand vos collaborateurs travaillent avec des agents IA.</h3>
+          <p>Les nouvelles compétences managériales pour superviser des équipes où humains et agents cohabitent.</p>
+          <div class="article-date">Mars 2026 · 10 min de lecture</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</div><!-- /ressources -->
+
+
+<!-- ══ PAGE : CONTACT ══ -->
+<div id="page-contact" class="page">
+
+  <div class="page-hero" style="padding-bottom:0;">
+    <div class="container" style="grid-template-columns:1fr;">
+      <div style="max-width:580px;">
+        <div class="tag tag-dark" style="margin-bottom:20px;">Diagnostic stratégique · Gratuit</div>
+        <h1 style="color:white;">Parlons de votre<br><em style="color:var(--blue-light);font-style:italic;">transition IA.</em></h1>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <div class="container">
+      <div class="contact-grid">
+        <div class="contact-promise">
+          <h2>1 heure.<br>Une idée concrète<br>à mettre en œuvre.</h2>
+          <p>Ce diagnostic est gratuit, sans engagement, et calibré sur votre situation réelle — pas sur un catalogue d'offres. À l'issue de l'échange, vous repartez avec au moins une action concrète, quel que soit la suite.</p>
+          <p>Nous discutons de vos besoins de gouvernance, de vos freins internes, et si pertinent, du financement de votre programme de coaching via votre OPCO.</p>
+          <div class="contact-items">
+            <div class="contact-item">
+              <div class="contact-item-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+              </div>
+              <div>
+                <div class="contact-item-title">Email direct</div>
+                <div class="contact-item-desc">contact@hanibal.fr · Réponse sous 24h ouvrées</div>
+              </div>
+            </div>
+            <div class="contact-item">
+              <div class="contact-item-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              </div>
+              <div>
+                <div class="contact-item-title">Réservation directe</div>
+                <div class="contact-item-desc">Choisissez un créneau dans l'agenda — en ligne ou sur site</div>
+              </div>
+            </div>
+            <div class="contact-item">
+              <div class="contact-item-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              </div>
+              <div>
+                <div class="contact-item-title">Fécamp · France entière</div>
+                <div class="contact-item-desc">En visio ou sur site — nous nous déplaçons partout en France</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="contact-form">
+          <h3 style="font-size:1.1rem;color:var(--navy);margin-bottom:24px;">Dites-nous en un peu plus</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Prénom & nom</label>
+              <input type="text" placeholder="Marie Dupont">
+            </div>
+            <div class="form-group">
+              <label>Organisation</label>
+              <input type="text" placeholder="Votre entreprise">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Email professionnel</label>
+            <input type="email" placeholder="marie@entreprise.fr">
+          </div>
+          <div class="form-group">
+            <label>Taille de l'organisation</label>
+            <select>
+              <option value="">Sélectionner...</option>
+              <option>Moins de 20 personnes</option>
+              <option>20 à 100 personnes</option>
+              <option>100 à 500 personnes</option>
+              <option>Plus de 500 personnes</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Ce qui vous préoccupe en ce moment</label>
+            <textarea placeholder="Décrivez votre situation en quelques mots — pas besoin d'être précis, c'est pour que l'échange soit utile dès le départ."></textarea>
+          </div>
+          <button class="btn btn-primary form-submit">Envoyer ma demande de diagnostic</button>
+          <p class="form-note">Réponse garantie sous 24h ouvrées · Aucun engagement · Données confidentielles</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</div><!-- /contact -->
+
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="logo-mark">H<span>A</span>NIBAL</div>
+        <p class="footer-brand-desc">Agence de Ressources Agentiques. Nous aidons les dirigeants à structurer leur transition IA — depuis Fécamp, partout en France.</p>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Offre</div>
+        <a onclick="showPage('coaching')">Coaching dirigeants</a>
+        <a onclick="showPage('methode')">Atelier IA Canvas</a>
+        <a onclick="showPage('methode')">Gouvernance & sécurité</a>
+        <a onclick="showPage('methode')">Location d'agents IA</a>
+        <a onclick="showPage('audit')">Audit agents IA</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Ressources</div>
+        <a onclick="showPage('ressources')">Guide transition IA</a>
+        <a onclick="showPage('ressources')">Articles & analyses</a>
+        <a href="https://www.hanibal.fr/manifeste" target="_blank">Manifeste — Objets Cognitifs</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Contact</div>
+        <a href="mailto:contact@hanibal.fr">contact@hanibal.fr</a>
+        <a onclick="showPage('contact')">Réserver un diagnostic</a>
+        <a>Mentions légales</a>
+        <a>Politique de confidentialité</a>
+        <a>Datadock</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-bottom-left">© 2026 Hanibal · Agentic Resources · Fécamp, Normandie</div>
+      <div class="footer-bottom-right">
+        <a>Mentions légales</a>
+        <a>Confidentialité</a>
+        <a>Datadock</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+const pages = ['home','coaching','methode','audit','ressources','contact'];
+const navLinks = {'coaching':'nav-coaching','methode':'nav-methode','ressources':'nav-ressources'};
+
+function showPage(name) {
+  pages.forEach(p => {
+    const el = document.getElementById('page-' + p);
+    if (el) el.classList.remove('active');
+  });
+  Object.values(navLinks).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+  const target = document.getElementById('page-' + name);
+  if (target) {
+    target.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  if (navLinks[name]) {
+    const navEl = document.getElementById(navLinks[name]);
+    if (navEl) navEl.classList.add('active');
+  }
+}
+</script>
+</body>
+</html>
