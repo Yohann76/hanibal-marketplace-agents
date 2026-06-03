@@ -345,6 +345,8 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
   const [error, setError] = useState<string | null>(null)
   const [activeTool, setActiveTool] = useState<string | null>(null)
   const [costConfig, setCostConfig] = useState<CostConfig | null>(null)
+  const [gmailConnected, setGmailConnected] = useState<boolean | null>(null)
+  const hasGmail = toolsInfo.some(t => t.name === 'gmail_read')
   const bottomRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const shouldAutoScroll = useRef(true)
@@ -354,6 +356,12 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
       if (d.models) setCostConfig(d.models)
     }).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    if (!hasGmail) return
+    const check = () => fetch('/api/gmail/status').then(r => r.json()).then(d => setGmailConnected(d.connected)).catch(() => setGmailConnected(false))
+    check()
+  }, [hasGmail])
 
   useEffect(() => {
     if (!shouldAutoScroll.current) return
@@ -581,6 +589,34 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
         </div>
 
         {/* Active tools list */}
+        {hasGmail && (
+          <div className="border-t border-gray-800/80 p-3 shrink-0">
+            <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-2 px-1 font-semibold">Gmail</p>
+            {gmailConnected === null ? (
+              <div className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-gray-800/40 border border-gray-700/40">
+                <span className="w-2 h-2 rounded-full bg-gray-600 animate-pulse shrink-0" />
+                <span className="text-[11px] text-gray-500">Vérification…</span>
+              </div>
+            ) : gmailConnected ? (
+              <div className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-green-950/40 border border-green-900/50">
+                <span className="w-2 h-2 rounded-full bg-green-400 shrink-0" />
+                <span className="text-[11px] text-green-400 font-medium">Connecté</span>
+              </div>
+            ) : (
+              <a
+                href="/api/gmail/auth"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-red-950/40 border border-red-900/50 hover:bg-red-950/70 transition-colors w-full"
+              >
+                <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
+                <span className="text-[11px] text-red-400 font-medium">Non connecté</span>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ml-auto text-red-600 shrink-0"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </a>
+            )}
+          </div>
+        )}
+
         {toolsInfo.length > 0 && (
           <div className="border-t border-gray-800/80 p-3 shrink-0">
             <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-2 px-1 font-semibold">Outils actifs</p>

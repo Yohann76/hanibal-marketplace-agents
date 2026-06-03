@@ -20,7 +20,6 @@ def gmail_read(query: str = "") -> str:
         from app.config import BACKEND_PUBLIC_URL
 
         if not is_connected():
-            from app.config import BACKEND_PUBLIC_URL
             return (
                 "❌ Gmail non connecté.\n\n"
                 f"Pour connecter Gmail, ouvrez ce lien dans votre navigateur :\n"
@@ -28,8 +27,6 @@ def gmail_read(query: str = "") -> str:
                 "Après authentification, relancez votre demande."
             )
 
-        return asyncio.get_event_loop().run_until_complete(
-            fetch_emails(query=query, max_results=25)
-        )
+        return asyncio.run(fetch_emails(query=query, max_results=25))
     except Exception as e:
         return f"Erreur Gmail : {e}"
