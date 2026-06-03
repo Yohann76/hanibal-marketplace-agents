@@ -1,13 +1,14 @@
 {
   "id": "assistant-gestion",
   "name": "Assistant de gestion",
-  "description": "Génère un compte-rendu structuré à partir d'une transcription de réunion, ou résume vos emails Gmail du jour.",
+  "description": "Génère un compte-rendu structuré à partir d'une transcription de réunion, ou résume vos emails Gmail du jour via l'API Google.",
   "type": "analyse",
   "provider": "mistral",
+  "tools": ["gmail_read"],
   "input": {
-    "type": "gestion",
-    "label": "Transcription ou emails Gmail",
-    "placeholder": "Collez ici la transcription de votre réunion..."
+    "type": "text",
+    "label": "Votre demande",
+    "placeholder": "Ex: Résume mes emails du jour — ou collez une transcription de réunion pour générer un compte-rendu"
   },
   "output": {
     "type": "text"

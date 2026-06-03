@@ -36,6 +36,15 @@ def init_db():
                 updated_at TIMESTAMP DEFAULT NOW()
             )
         """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS gmail_tokens (
+                user_key VARCHAR(100) PRIMARY KEY,
+                access_token TEXT NOT NULL,
+                refresh_token TEXT,
+                expires_at TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT NOW()
+            )
+        """))
         conn.commit()
 
 def save_execution(agent_id: str, session_id: str | None, input_tokens: int, output_tokens: int):

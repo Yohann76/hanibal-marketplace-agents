@@ -1,0 +1,179 @@
+---
+- name: Déploiement Marketplace OC Agents
+  hosts: marketplace
+  become: true
+  vars_files:
+    - vars.yml
+    - vault.yml
+
+  tasks:
+
+    # ── 1. Dépendances système ────────────────────────────────────────────────
+
+    - name: Mettre à jour apt
+      apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Installer les paquets requis
+      apt:
+        name:
+          - nginx
+          - certbot
+          - python3-certbot-nginx
+          - git
+          - curl
+          - ca-certificates
+          - gnupg
+        state: present
+
+    # ── 2. Docker ─────────────────────────────────────────────────────────────
+
+    - name: Vérifier si Docker est installé
+      command: docker --version
+      register: docker_check
+      ignore_errors: true
+      changed_when: false
+
+    - name: Installer Docker
+      when: docker_check.rc != 0
+      shell: |
+        curl -fsSL https://get.docker.com | sh
+        usermod -aG docker {{ app_user }}
+      args:
+        executable: /bin/bash
+
+    - name: S'assurer que Docker tourne
+      systemd:
+        name: docker
+        state: started
+        enabled: true
+
+    # ── 3. Code applicatif ────────────────────────────────────────────────────
+
+    - name: Vérifier si le dépôt existe
+      stat:
+        path: "{{ app_dir }}/.git"
+      register: repo_stat
+
+    - name: Cloner le dépôt si absent
+      become_user: "{{ app_user }}"
+      git:
+        repo: "{{ git_repo | default('') }}"
+        dest: "{{ app_dir }}"
+        version: main
+      when: not repo_stat.stat.exists and (git_repo is defined and git_repo != '')
+
+    - name: Synchroniser le code (rsync depuis local si pas de git_repo)
+      synchronize:
+        src: "{{ playbook_dir }}/../"
+        dest: "{{ app_dir }}/"
+        delete: false
+        rsync_opts:
+          - "--exclude=.git"
+          - "--exclude=ansible"
+          - "--exclude=node_modules"
+          - "--exclude=.next"
+          - "--exclude=__pycache__"
+          - "--exclude=.env"
+      when: git_repo is not defined or git_repo == ''
+
+    # ── 4. Fichier .env de production ─────────────────────────────────────────
+
+    - name: Générer le .env depuis le vault
+      template:
+        src: templates/env.j2
+        dest: "{{ app_dir }}/.env"
+        owner: "{{ app_user }}"
+        mode: '0600'
+
+    # ── 5. Nginx — config HTTP initiale (pour certbot) ────────────────────────
+
+    - name: Créer le répertoire webroot certbot
+      file:
+        path: /var/www/certbot
+        state: directory
+        mode: '0755'
+
+    - name: Config Nginx temporaire (HTTP only pour obtenir le certificat)
+      copy:
+        dest: "/etc/nginx/sites-available/{{ domain }}"
+        content: |
+          server {
+              listen 80;
+              server_name {{ domain }};
+              location /.well-known/acme-challenge/ {
+                  root /var/www/certbot;
+              }
+              location / {
+                  return 200 'OK';
+                  add_header Content-Type text/plain;
+              }
+          }
+
+    - name: Activer le site Nginx
+      file:
+        src: "/etc/nginx/sites-available/{{ domain }}"
+        dest: "/etc/nginx/sites-enabled/{{ domain }}"
+        state: link
+
+    - name: Désactiver le site default Nginx
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+
+    - name: Recharger Nginx (config HTTP)
+      systemd:
+        name: nginx
+        state: reloaded
+
+    # ── 6. Certificat SSL Let's Encrypt ───────────────────────────────────────
+
+    - name: Vérifier si le certificat existe déjà
+      stat:
+        path: "/etc/letsencrypt/live/{{ domain }}/fullchain.pem"
+      register: cert_stat
+
+    - name: Obtenir le certificat SSL (certbot)
+      command: >
+        certbot certonly --nginx
+        -d {{ domain }}
+        --non-interactive
+        --agree-tos
+        --email admin@{{ domain }}
+        --redirect
+      when: not cert_stat.stat.exists
+
+    # ── 7. Nginx — config HTTPS finale ────────────────────────────────────────
+
+    - name: Déployer la config Nginx HTTPS
+      template:
+        src: templates/nginx.conf.j2
+        dest: "/etc/nginx/sites-available/{{ domain }}"
+      notify: Recharger Nginx
+
+    # ── 8. Docker Compose ─────────────────────────────────────────────────────
+
+    - name: Lancer docker compose (build + up)
+      become_user: "{{ app_user }}"
+      community.docker.docker_compose_v2:
+        project_src: "{{ app_dir }}"
+        build: always
+        state: present
+      environment:
+        PATH: "/usr/local/bin:/usr/bin:/bin"
+
+    # ── 9. Renouvellement automatique SSL ─────────────────────────────────────
+
+    - name: Cron renouvellement certificat (2x par jour)
+      cron:
+        name: "certbot renew"
+        minute: "0"
+        hour: "3,15"
+        job: "certbot renew --quiet && systemctl reload nginx"
+
+  handlers:
+    - name: Recharger Nginx
+      systemd:
+        name: nginx
+        state: reloaded

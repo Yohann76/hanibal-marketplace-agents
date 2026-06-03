@@ -15,6 +15,10 @@ Right for each agent (coched case, see email, send email, search internet...)(pe
 - See Qwen with API KEY
 - Obsidian for database restructured (and create fiche?)
 
+# Deploy with HTTPS (Ansible)
+
+- add DNS Zone for domains (obtains HTTPS for agent google)
+
 
 
 

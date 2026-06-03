@@ -1,0 +1,20 @@
+---
+# Variables non-sensibles — pas besoin de chiffrer
+
+domain:       "agents.hanibal.fr"
+app_dir:      "/home/yohann/marketplace-oc-agents"
+app_user:     "yohann"
+
+# Ports internes Docker (ne pas exposer Postgres en prod)
+frontend_port: 42000
+backend_port:  42001
+
+# Modèles IA
+mistral_model:             "mistral-small-latest"
+claude_model:              "claude-sonnet-4-6"
+
+# Coûts en EUR par million de tokens
+mistral_cost_input_per_m:  "0.15"
+mistral_cost_output_per_m: "0.60"
+claude_cost_input_per_m:   "2.76"
+claude_cost_output_per_m:  "13.80"
