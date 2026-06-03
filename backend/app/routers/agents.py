@@ -10,7 +10,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
-from app.services import agent_runner, seo_service, gmail_service, prospection_service
+from app.services import agent_runner, gmail_service
 from app.database import save_execution, upsert_conversation_session
 from app.config import (
     BACKEND_PUBLIC_URL,
@@ -134,25 +134,9 @@ async def get_agent(agent_id: str):
 async def _resolve_input(agent_id: str, body: RunRequest) -> str:
     detail = load_agent_detail(agent_id)
     input_type = detail["config"]["input"]["type"]
-    if input_type == "url":
-        if not body.input:
-            raise HTTPException(422, "URL is required")
-        try:
-            return await seo_service.fetch_url_content(body.input)
-        except Exception as e:
-            logger.error("SEO error: %s\n%s", e, traceback.format_exc())
-            raise HTTPException(500, f"Cannot access URL: {e}")
-    elif input_type == "prospection":
-        if not body.input:
-            raise HTTPException(422, "Please describe your prospection target")
-        try:
-            return await prospection_service.search_entreprises(body.input)
-        except Exception as e:
-            raise HTTPException(500, f"Prospection API error: {e}")
-    else:
-        if not body.input:
-            raise HTTPException(422, "Input is required")
-        return body.input
+    if not body.input:
+        raise HTTPException(422, "Input is required")
+    return body.input
 
 
 @router.post("/agents/{agent_id}/run")
