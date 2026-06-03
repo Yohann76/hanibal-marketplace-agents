@@ -1,0 +1,16 @@
+{
+  "id": "urbaniste",
+  "name": "Urbaniste",
+  "description": "Analyse complète d'une adresse ou parcelle : cadastre, risques naturels et technologiques, PLU, réglementation applicable, historique CatNat et données foncières.",
+  "type": "analyse",
+  "provider": "mistral",
+  "tools": ["geocode_address", "cadastre_parcelle", "georisques_commune", "plu_info", "web_search", "mcp_datagouv"],
+  "input": {
+    "type": "text",
+    "label": "Adresse ou parcelle à analyser",
+    "placeholder": "Ex: 10 rue de Rivoli 75004 Paris — ou posez une question : quels risques pour cette adresse ? quel est le PLU de cette parcelle ?"
+  },
+  "output": {
+    "type": "text"
+  }
+}
