@@ -335,8 +335,18 @@ function ToolCallIndicator({ toolName, toolsInfo }: { toolName: string; toolsInf
 
 /* ─── UseTab ─── */
 
+function sessionStorageKey(agentId: string) {
+  return `oc-active-session-${agentId}`
+}
+
 function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInfo[] }) {
-  const [activeSessionId, setActiveSessionId] = useState<string>(() => generateUUID())
+  const [activeSessionId, setActiveSessionId] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem(sessionStorageKey(config.id))
+      if (saved) return saved
+    }
+    return generateUUID()
+  })
   const [sessions, setSessions] = useState<ConversationSession[]>([])
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [loadingHistory, setLoadingHistory] = useState(false)
@@ -383,14 +393,19 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
 
   useEffect(() => { fetchSessions() }, [fetchSessions])
 
-  const loadSession = async (sessionId: string) => {
-    if (sessionId === activeSessionId && messages.length > 0) return
+  useEffect(() => {
+    sessionStorage.setItem(sessionStorageKey(config.id), activeSessionId)
+  }, [activeSessionId, config.id])
+
+  const historyRestoredRef = useRef(false)
+
+  const loadSession = useCallback(async (sessionId: string) => {
     setActiveSessionId(sessionId)
     setMessages([])
     setError(null)
     setLoadingHistory(true)
     try {
-      const res = await fetch(`/api/conversations/${sessionId}`)
+      const res = await fetch(`/api/conversations/${sessionId}/messages`)
       if (res.ok) {
         const data = await res.json()
         const msgs: ChatMessage[] = (data.messages ?? []).map((m: any) => ({
@@ -407,13 +422,32 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
       }
     } catch {}
     finally { setLoadingHistory(false) }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (historyRestoredRef.current || sessions.length === 0) return
+    const saved = sessionStorage.getItem(sessionStorageKey(config.id))
+    const toLoad =
+      saved && sessions.some(s => s.session_id === saved)
+        ? saved
+        : sessions[0]?.session_id
+    if (!toLoad) return
+    historyRestoredRef.current = true
+    loadSession(toLoad)
+  }, [sessions, config.id, loadSession])
 
   const startNewSession = () => {
     shouldAutoScroll.current = true
-    setActiveSessionId(generateUUID())
+    const id = generateUUID()
+    setActiveSessionId(id)
+    sessionStorage.setItem(sessionStorageKey(config.id), id)
     setMessages([])
     setError(null)
+  }
+
+  const openSession = (sessionId: string) => {
+    if (sessionId === activeSessionId && messages.length > 0) return
+    loadSession(sessionId)
   }
 
   const isText = true
@@ -550,7 +584,7 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
             return (
               <button
                 key={s.session_id}
-                onClick={() => loadSession(s.session_id)}
+                onClick={() => openSession(s.session_id)}
                 className={`w-full text-left px-3 py-2.5 mx-0 transition-all rounded-none border-b border-gray-800/40 ${
                   isActive
                     ? 'bg-gray-800/60 border-l-2 border-l-blue-500 pl-2.5'
