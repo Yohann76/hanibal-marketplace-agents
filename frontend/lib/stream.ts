@@ -2,7 +2,7 @@ export type StreamEvent =
   | { type: 'token'; content: string }
   | { type: 'tool_start'; tool: string; input: string }
   | { type: 'tool_end'; tool: string; result?: string; call_tokens?: number; call_input_tokens?: number; call_output_tokens?: number; call_cost_eur?: number }
-  | { type: 'done'; input_tokens: number; output_tokens: number; cost_eur?: number }
+  | { type: 'done'; input_tokens: number; output_tokens: number; cost_eur?: number; trace_id?: string }
   | { type: 'error'; message: string }
 
 export async function* readStream(res: Response): AsyncGenerator<StreamEvent> {

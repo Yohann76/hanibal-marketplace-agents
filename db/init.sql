@@ -1,3 +1,6 @@
+-- Base de données séparée pour LangFuse (observabilité)
+CREATE DATABASE langfuse;
+
 CREATE TABLE IF NOT EXISTS executions (
     id          SERIAL PRIMARY KEY,
     agent_id    VARCHAR(100) NOT NULL,

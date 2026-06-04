@@ -1,13 +1,15 @@
 ---
 # Variables non-sensibles — pas besoin de chiffrer
 
-domain:       "agents.hanibal.fr"
+domain:          "agents.hanibal.fr"
+langfuse_domain: "langfuse.agents.hanibal.fr"
 app_dir:      "/home/yohann/marketplace-oc-agents"
 app_user:     "yohann"
 
 # Ports internes Docker (ne pas exposer Postgres en prod)
-frontend_port: 42000
-backend_port:  42001
+frontend_port:  42000
+backend_port:   42001
+langfuse_port:  42003
 
 # Modèles IA
 mistral_model:             "mistral-small-latest"

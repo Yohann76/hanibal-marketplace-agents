@@ -16,6 +16,36 @@ services:
       timeout: 5s
       retries: 5
 
+  langfuse:
+    image: langfuse/langfuse:2
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "42003:3000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/langfuse
+      NEXTAUTH_SECRET: oc-agents-nextauth-secret
+      SALT: oc-agents-salt-secret
+      NEXTAUTH_URL: ${LANGFUSE_NEXTAUTH_URL:-http://162.19.241.44:42003}
+      TELEMETRY_ENABLED: "false"
+      # Projet pré-configuré — aucune création manuelle nécessaire
+      LANGFUSE_INIT_ORG_ID: oc-org
+      LANGFUSE_INIT_ORG_NAME: OC Agents
+      LANGFUSE_INIT_PROJECT_ID: oc-project
+      LANGFUSE_INIT_PROJECT_NAME: marketplace-oc-agents
+      LANGFUSE_INIT_PROJECT_PUBLIC_KEY: pk-lf-oc-agents-local
+      LANGFUSE_INIT_PROJECT_SECRET_KEY: sk-lf-oc-agents-local
+      LANGFUSE_INIT_USER_EMAIL: admin@oc-agents.local
+      LANGFUSE_INIT_USER_NAME: Admin
+      LANGFUSE_INIT_USER_PASSWORD: adminadmin
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/public/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
   backend:
     build:
       context: ./backend
@@ -40,6 +70,10 @@ services:
       - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
       - BACKEND_PUBLIC_URL=${BACKEND_PUBLIC_URL}
       - PORT=8080
+      # LangFuse observabilité — clés pré-configurées, aucun .env requis
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-pk-lf-oc-agents-local}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-sk-lf-oc-agents-local}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-http://langfuse:3000}
     depends_on:
       postgres:
         condition: service_healthy

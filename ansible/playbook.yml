@@ -95,13 +95,24 @@
         state: directory
         mode: '0755'
 
-    - name: Config Nginx temporaire (HTTP only pour obtenir le certificat)
+    - name: Config Nginx temporaire (HTTP only pour obtenir les certificats)
       copy:
         dest: "/etc/nginx/sites-available/{{ domain }}"
         content: |
           server {
               listen 80;
               server_name {{ domain }};
+              location /.well-known/acme-challenge/ {
+                  root /var/www/certbot;
+              }
+              location / {
+                  return 200 'OK';
+                  add_header Content-Type text/plain;
+              }
+          }
+          server {
+              listen 80;
+              server_name {{ langfuse_domain }};
               location /.well-known/acme-challenge/ {
                   root /var/www/certbot;
               }
@@ -143,6 +154,21 @@
         --email admin@{{ domain }}
         --redirect
       when: not cert_stat.stat.exists
+
+    - name: Vérifier si le certificat LangFuse existe déjà
+      stat:
+        path: "/etc/letsencrypt/live/{{ langfuse_domain }}/fullchain.pem"
+      register: langfuse_cert_stat
+
+    - name: Obtenir le certificat SSL LangFuse (certbot)
+      command: >
+        certbot certonly --nginx
+        -d {{ langfuse_domain }}
+        --non-interactive
+        --agree-tos
+        --email admin@{{ domain }}
+        --redirect
+      when: not langfuse_cert_stat.stat.exists
 
     # ── 7. Nginx — config HTTPS finale ────────────────────────────────────────
 

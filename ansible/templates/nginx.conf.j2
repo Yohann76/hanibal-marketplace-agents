@@ -12,6 +12,19 @@ server {
 }
 
 server {
+    listen 80;
+    server_name {{ langfuse_domain }};
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
     listen 443 ssl;
     server_name {{ domain }};
 
@@ -42,6 +55,26 @@ server {
         proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header   X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 120s;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name {{ langfuse_domain }};
+
+    ssl_certificate     /etc/letsencrypt/live/{{ langfuse_domain }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ langfuse_domain }}/privkey.pem;
+    include             /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam         /etc/letsencrypt/ssl-dhparams.pem;
+
+    location / {
+        proxy_pass         http://localhost:{{ langfuse_port }};
+        proxy_http_version 1.1;
+        proxy_set_header   Host $host;
+        proxy_set_header   X-Real-IP $remote_addr;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
         proxy_read_timeout 120s;
     }
 }

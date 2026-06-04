@@ -197,6 +197,18 @@ async def get_history(agent_id: str, session_id: str):
     return {"session_id": session_id, "agent_id": agent_id, "messages": messages}
 
 
+class ScoreRequest(BaseModel):
+    value: float
+    comment: Optional[str] = None
+    name: str = "user-feedback"
+
+
+@router.post("/traces/{trace_id}/score")
+async def score_trace(trace_id: str, body: ScoreRequest):
+    ok = await agent_runner.score_trace(trace_id, body.value, body.comment, body.name)
+    return {"ok": ok, "trace_id": trace_id}
+
+
 class ToolRunRequest(BaseModel):
     input: str
 

@@ -42,6 +42,7 @@ interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
   tool_calls?: ToolCallRecord[]
+  trace_id?: string
 }
 
 interface CostConfig {
@@ -218,6 +219,71 @@ const TOOL_ICONS: Record<string, React.ReactNode> = {
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
     </svg>
   ),
+}
+
+/* ─── FeedbackButtons ─── */
+
+function FeedbackButtons({ traceId }: { traceId: string }) {
+  const [score, setScore] = useState<1 | -1 | null>(null)
+  const [sending, setSending] = useState(false)
+
+  const send = async (value: 1 | -1) => {
+    if (score !== null || sending) return
+    setSending(true)
+    try {
+      await fetch(`/api/traces/${traceId}/score`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value, name: 'user-feedback' }),
+      })
+      setScore(value)
+    } catch {}
+    finally { setSending(false) }
+  }
+
+  return (
+    <div className="flex items-center gap-1 mt-2.5 pl-0.5">
+      <button
+        onClick={() => send(1)}
+        disabled={score !== null || sending}
+        title="Bonne réponse"
+        className={`p-1.5 rounded-lg transition-all disabled:cursor-default ${
+          score === 1
+            ? 'text-emerald-400 bg-emerald-950/40 border border-emerald-900/50'
+            : 'text-gray-700 hover:text-gray-400 hover:bg-gray-800/60 border border-transparent'
+        }`}
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill={score === 1 ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/>
+          <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+        </svg>
+      </button>
+      <button
+        onClick={() => send(-1)}
+        disabled={score !== null || sending}
+        title="Mauvaise réponse"
+        className={`p-1.5 rounded-lg transition-all disabled:cursor-default ${
+          score === -1
+            ? 'text-red-400 bg-red-950/40 border border-red-900/50'
+            : 'text-gray-700 hover:text-gray-400 hover:bg-gray-800/60 border border-transparent'
+        }`}
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill={score === -1 ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/>
+          <path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/>
+        </svg>
+      </button>
+      {score !== null && (
+        <span className="text-[11px] text-gray-600 ml-1 flex items-center gap-1">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="text-gray-600"><polyline points="20 6 9 17 4 12"/></svg>
+          Envoyé
+        </span>
+      )}
+      {sending && (
+        <span className="w-3 h-3 border-2 border-gray-600 border-t-gray-400 rounded-full animate-spin ml-1" />
+      )}
+    </div>
+  )
 }
 
 /* ─── ToolCallResult ─── */
@@ -509,6 +575,12 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
             msgs[msgs.length - 1] = { ...last, tool_calls: tcs }
             return msgs
           })
+        } else if (event.type === 'done' && event.trace_id) {
+          setMessages(prev => {
+            const msgs = [...prev]
+            msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], trace_id: event.trace_id }
+            return msgs
+          })
         } else if (event.type === 'error') {
           throw new Error(event.message)
         }
@@ -706,6 +778,9 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
                       </div>
                     )}
                     {msg.content && <MarkdownResult content={msg.content} isStreaming={loading && i === messages.length - 1} />}
+                    {msg.trace_id && !(loading && i === messages.length - 1) && (
+                      <FeedbackButtons traceId={msg.trace_id} />
+                    )}
                   </div>
                 )}
               </div>
