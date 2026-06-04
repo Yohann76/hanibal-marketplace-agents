@@ -11,11 +11,6 @@
 
 - for each agent, display diagram fonctionnal user prompt -> different tool usage, response... in mermaid diagram (in documentation page)
 
-# Agent strategy 
-
-- Different response template per agent? 
-- Multi-agent ? 
-
 # Explore
 
 - Auth google with different tools (calendar etc...)
