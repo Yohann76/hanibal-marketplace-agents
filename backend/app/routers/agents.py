@@ -11,7 +11,7 @@ from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 from app.services import agent_runner, gmail_service
-from app.database import save_execution, upsert_conversation_session
+from app.database import upsert_conversation_session
 from app.config import (
     BACKEND_PUBLIC_URL,
     MISTRAL_MODEL, CLAUDE_MODEL,
@@ -151,8 +151,6 @@ async def run_agent(agent_id: str, body: RunRequest):
     except Exception as e:
         logger.error("Agent runner error: %s\n%s", e, traceback.format_exc())
         raise HTTPException(500, str(e))
-
-    save_execution(agent_id, body.session_id, result["input_tokens"], result["output_tokens"])
 
     if body.session_id:
         title = (body.input or "")[:80] or f"Session {agent_id}"

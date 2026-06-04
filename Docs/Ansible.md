@@ -13,6 +13,8 @@ cd ansible
 ```bash
 ansible-vault edit ansible/vault.yml
 # → Ouvre l'éditeur, rechiffre automatiquement à la fermeture
+
+qw! pour quit + save
 ```
 
 ### Voir le contenu sans modifier

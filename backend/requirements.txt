@@ -22,4 +22,4 @@ google-auth==2.32.0
 google-auth-oauthlib==1.2.1
 
 # Observability
-langfuse>=2.0.0
+langfuse>=2.0.0,<3.0.0

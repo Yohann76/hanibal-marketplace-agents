@@ -1,10 +1,11 @@
+import base64
 import importlib.util
 import json
 import uuid
 import asyncio
 import httpx
 from pathlib import Path
-from typing import Optional, AsyncGenerator
+from typing import Optional, AsyncGenerator, Any
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from sqlalchemy import text
@@ -13,20 +14,11 @@ from app.config import (
     MISTRAL_MODEL, CLAUDE_MODEL,
     MISTRAL_COST_INPUT_PER_M, MISTRAL_COST_OUTPUT_PER_M,
     CLAUDE_COST_INPUT_PER_M, CLAUDE_COST_OUTPUT_PER_M,
-    LANGFUSE_PUBLIC_KEY,
+    LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, LANGFUSE_HOST,
 )
 from app.database import engine
 
 AGENTS_DIR = Path(__file__).parent.parent.parent / "agents"
-
-_COST_TABLE = {
-    "mistral": (MISTRAL_COST_INPUT_PER_M, MISTRAL_COST_OUTPUT_PER_M),
-    "claude":  (CLAUDE_COST_INPUT_PER_M,  CLAUDE_COST_OUTPUT_PER_M),
-}
-
-def _calc_cost(provider: str, input_tokens: int, output_tokens: int) -> float:
-    rate_in, rate_out = _COST_TABLE.get(provider, (MISTRAL_COST_INPUT_PER_M, MISTRAL_COST_OUTPUT_PER_M))
-    return round((input_tokens * rate_in + output_tokens * rate_out) / 1_000_000, 6)
 
 
 # ── LangFuse ──────────────────────────────────────────────────────────────────
@@ -46,10 +38,74 @@ def _get_lf():
         return None
     if _lf is None:
         try:
-            _lf = Langfuse()  # reads LANGFUSE_* from environment
+            _lf = Langfuse()
         except Exception:
             pass
     return _lf
+
+
+async def register_models_in_langfuse():
+    """
+    Enregistre Mistral et Claude dans LangFuse au démarrage.
+    LangFuse calcule ensuite automatiquement les coûts sur chaque génération.
+    """
+    if not LANGFUSE_PUBLIC_KEY or not LANGFUSE_SECRET_KEY:
+        return
+    credentials = base64.b64encode(f"{LANGFUSE_PUBLIC_KEY}:{LANGFUSE_SECRET_KEY}".encode()).decode()
+    models = [
+        {
+            "modelName": MISTRAL_MODEL,
+            "matchPattern": f"(?i)^{MISTRAL_MODEL}$",
+            "unit": "TOKENS",
+            "inputPrice": MISTRAL_COST_INPUT_PER_M / 1_000_000,
+            "outputPrice": MISTRAL_COST_OUTPUT_PER_M / 1_000_000,
+        },
+        {
+            "modelName": CLAUDE_MODEL,
+            "matchPattern": f"(?i)^{CLAUDE_MODEL}$",
+            "unit": "TOKENS",
+            "inputPrice": CLAUDE_COST_INPUT_PER_M / 1_000_000,
+            "outputPrice": CLAUDE_COST_OUTPUT_PER_M / 1_000_000,
+        },
+    ]
+    async with httpx.AsyncClient(timeout=10) as client:
+        for model in models:
+            try:
+                await client.post(
+                    f"{LANGFUSE_HOST}/api/public/models",
+                    headers={"Authorization": f"Basic {credentials}"},
+                    json=model,
+                )
+            except Exception:
+                pass
+
+
+def _resolve_system_prompt(agent_id: str) -> tuple[str, Any]:
+    """
+    Retourne (texte_prompt, objet_prompt_langfuse|None).
+    Priorité : LangFuse → fichier (auto-sync vers LangFuse au premier appel).
+    Modifier le prompt dans le dashboard LangFuse suffit pour le mettre à jour
+    sans redéployer.
+    """
+    file_text = (AGENTS_DIR / agent_id / "system_prompt.txt").read_text()
+    lf = _get_lf()
+    if not lf:
+        return file_text, None
+    try:
+        obj = lf.get_prompt(f"agent/{agent_id}", cache_ttl_seconds=60)
+        return obj.prompt, obj
+    except Exception:
+        # Prompt absent de LangFuse — on le crée depuis le fichier
+        try:
+            lf.create_prompt(
+                name=f"agent/{agent_id}",
+                prompt=file_text,
+                labels=["production"],
+            )
+            obj = lf.get_prompt(f"agent/{agent_id}", cache_ttl_seconds=60)
+            return obj.prompt, obj
+        except Exception:
+            return file_text, None
 
 
 async def score_trace(
@@ -58,7 +114,6 @@ async def score_trace(
     comment: str | None = None,
     name: str = "user-feedback",
 ) -> bool:
-    """Send a user score (thumbs up/down) to LangFuse for a given trace."""
     lf = _get_lf()
     if not lf or not trace_id:
         return False
@@ -90,7 +145,7 @@ class UsageCallback(BaseCallbackHandler):
             pass
 
 
-# ── LLM factory ────────────────────────────────────────────────────────────────
+# ── LLM factory ───────────────────────────────────────────────────────────────
 
 def get_llm(provider: str, callbacks: list):
     if provider == "claude":
@@ -106,7 +161,6 @@ def get_model_name(provider: str) -> str:
 # ── Agent config helpers ──────────────────────────────────────────────────────
 
 def load_agent_tools(agent_id: str) -> tuple[list, dict]:
-    """Load tools from the agent's own tools/ subfolder."""
     tools_dir = AGENTS_DIR / agent_id / "tools"
     if not tools_dir.exists():
         return [], {}
@@ -131,6 +185,13 @@ def load_agent_config(agent_id: str) -> dict:
     return json.loads((AGENTS_DIR / agent_id / "config.json").read_text())
 
 def load_system_prompt(agent_id: str) -> str:
+    """Lecture du prompt : LangFuse en priorité, fichier en fallback."""
+    lf = _get_lf()
+    if lf:
+        try:
+            return lf.get_prompt(f"agent/{agent_id}", cache_ttl_seconds=60).prompt
+        except Exception:
+            pass
     return (AGENTS_DIR / agent_id / "system_prompt.txt").read_text()
 
 def load_knowledge(agent_id: str) -> list[dict]:
@@ -193,25 +254,17 @@ async def save_history(session_id: str, human_msg: str, ai_msg: str, tool_calls:
     await asyncio.get_event_loop().run_in_executor(None, _sync_save_history, session_id, human_msg, ai_msg, tool_calls)
 
 
-# ── Direct Mistral tool loop (bypasses LangChain serialisation entirely) ─────
-#
-# langchain-mistralai 0.1.x has a bug where tool_call_id=None leaks through
-# even after patching AIMessage.tool_calls, because the serialiser reads from
-# additional_kwargs in some code paths.  By building the messages dict ourselves
-# and calling the Mistral REST API directly we guarantee the IDs are always set.
+# ── Direct Mistral tool loop ──────────────────────────────────────────────────
 
 def _lc_to_dict(m) -> dict:
-    """Convert a LangChain message to a plain Mistral API dict."""
     if isinstance(m, SystemMessage):
         return {"role": "system", "content": m.content}
     if isinstance(m, HumanMessage):
         return {"role": "user", "content": m.content}
-    # AIMessage from history — content only, no tool_calls
     return {"role": "assistant", "content": m.content or ""}
 
 
 def _tool_schema(t) -> dict:
-    """Build a Mistral-compatible tool schema from a LangChain @tool."""
     props, required = {}, []
     for name, info in (t.args or {}).items():
         props[name] = {"type": info.get("type", "string")}
@@ -234,6 +287,7 @@ async def _mistral_tool_loop(
     tools_dict: dict,
     usage: UsageCallback,
     lf_trace=None,
+    lf_prompt_obj=None,
 ) -> AsyncGenerator[dict, None]:
     history = [_lc_to_dict(m) for m in lc_messages]
     schemas = [_tool_schema(t) for t in tools]
@@ -241,7 +295,6 @@ async def _mistral_tool_loop(
 
     async with httpx.AsyncClient(timeout=60) as client:
         for iteration in range(15):
-            # LangFuse: track each LLM API call as a generation
             lf_gen = None
             if lf_trace:
                 try:
@@ -250,6 +303,8 @@ async def _mistral_tool_loop(
                         model=MISTRAL_MODEL,
                         model_parameters={"tool_choice": "auto"},
                         input=history,
+                        # Lien vers le prompt LangFuse sur le premier appel uniquement
+                        prompt=lf_prompt_obj if iteration == 0 else None,
                     )
                 except Exception:
                     lf_gen = None
@@ -279,10 +334,9 @@ async def _mistral_tool_loop(
             u = data.get("usage", {})
             usage.input_tokens  = u.get("prompt_tokens", 0)
             usage.output_tokens = u.get("completion_tokens", 0)
-            call_input_tokens  = u.get("prompt_tokens", 0)
-            call_output_tokens = u.get("completion_tokens", 0)
-            call_tokens = call_input_tokens + call_output_tokens
-            call_cost_eur = _calc_cost("mistral", call_input_tokens, call_output_tokens)
+            call_input_tokens   = u.get("prompt_tokens", 0)
+            call_output_tokens  = u.get("completion_tokens", 0)
+            call_tokens         = call_input_tokens + call_output_tokens
 
             msg        = data["choices"][0]["message"]
             tool_calls = msg.get("tool_calls") or []
@@ -300,7 +354,6 @@ async def _mistral_tool_loop(
                 full_response = msg.get("content") or ""
                 break
 
-            # Fix None IDs before they ever enter the history dict
             fixed = [
                 {**tc, "id": (tc.get("id") or "").strip() or f"call_{uuid.uuid4().hex[:8]}"}
                 for tc in tool_calls
@@ -321,14 +374,13 @@ async def _mistral_tool_loop(
 
                 yield {"type": "tool_start", "tool": name, "input": str(args)}
 
-                # LangFuse: track the tool execution as a span
                 lf_span = None
                 if lf_trace:
                     try:
                         lf_span = lf_trace.span(
                             name=f"tool/{name}",
                             input=args,
-                            metadata={"tool_call_id": tc["id"]},
+                            metadata={"tool_call_id": tc["id"], "call_tokens": call_tokens},
                         )
                     except Exception:
                         lf_span = None
@@ -352,14 +404,15 @@ async def _mistral_tool_loop(
                     "tool_call_id": tc["id"],
                     "content": str(result),
                 })
-                yield {"type": "tool_end", "tool": name, "result": str(result),
-                       "call_tokens": call_tokens,
-                       "call_input_tokens": call_input_tokens,
-                       "call_output_tokens": call_output_tokens,
-                       "call_cost_eur": call_cost_eur}
+                yield {
+                    "type": "tool_end",
+                    "tool": name,
+                    "result": str(result),
+                    "call_tokens": call_tokens,
+                    "call_input_tokens": call_input_tokens,
+                    "call_output_tokens": call_output_tokens,
+                }
 
-        # Si la boucle s'est terminée sans réponse finale (limite atteinte),
-        # forcer un dernier appel sans tools pour obtenir la synthèse
         if not full_response:
             resp = await client.post(
                 "https://api.mistral.ai/v1/chat/completions",
@@ -388,21 +441,25 @@ async def stream_agent(
     session_id: Optional[str] = None,
 ) -> AsyncGenerator[dict, None]:
 
-    config        = load_agent_config(agent_id)
-    system_prompt = load_system_prompt(agent_id)
-    knowledge     = load_knowledge(agent_id)
-    full_prompt   = build_system_prompt(system_prompt, knowledge)
-    provider      = config.get("provider", "mistral")
-    tool_names    = config.get("tools", [])
+    config     = load_agent_config(agent_id)
+    provider   = config.get("provider", "mistral")
+    tool_names = config.get("tools", [])
+
+    # ── Prompt : LangFuse en priorité, fichier en fallback + auto-sync ────────
+    system_prompt_text, lf_prompt_obj = await asyncio.get_event_loop().run_in_executor(
+        None, lambda: _resolve_system_prompt(agent_id)
+    )
+    knowledge  = load_knowledge(agent_id)
+    full_prompt = build_system_prompt(system_prompt_text, knowledge)
 
     usage   = UsageCallback()
     history = await load_history(session_id) if session_id else []
     full_response = ""
     completed_tool_calls: list = []
 
-    # ── LangFuse: open trace ──────────────────────────────────────────────────
+    # ── LangFuse : ouverture de la trace ──────────────────────────────────────
     lf = _get_lf()
-    lf_trace = None
+    lf_trace    = None
     lf_callbacks = [usage]
 
     if lf:
@@ -421,7 +478,6 @@ async def stream_agent(
                 input={"message": user_input},
                 tags=[agent_id, provider],
             )
-            # CallbackHandler with stateful_client nests LangChain spans under our trace
             lf_callbacks.append(LangfuseHandler(stateful_client=lf_trace))
         except Exception:
             lf_trace = None
@@ -432,9 +488,6 @@ async def stream_agent(
         tools, tools_dict = load_agent_tools(agent_id)
 
         if provider == "claude":
-            # ── Claude tool loop via LangChain ────────────────────────────────
-            # CallbackHandler auto-tracks each ainvoke() as a generation.
-            # Tool execution is manual so we create spans ourselves.
             from langchain_core.messages import ToolMessage
             llm            = get_llm(provider, lf_callbacks)
             llm_with_tools = llm.bind_tools(tools)
@@ -477,16 +530,16 @@ async def stream_agent(
                             pass
 
                     current.append(ToolMessage(content=str(result), tool_call_id=tc["id"]))
-                    event = {"type": "tool_end", "tool": tc["name"], "result": str(result)}
                     completed_tool_calls.append({"tool": tc["name"], "result": str(result)})
-                    yield event
+                    yield {"type": "tool_end", "tool": tc["name"], "result": str(result)}
 
             for i in range(0, len(full_response), 6):
                 yield {"type": "token", "content": full_response[i:i+6]}
 
         else:
-            # ── Mistral tool loop — direct HTTP, manual LangFuse tracking ─────
-            async for event in _mistral_tool_loop(messages, tools, tools_dict, usage, lf_trace):
+            async for event in _mistral_tool_loop(
+                messages, tools, tools_dict, usage, lf_trace, lf_prompt_obj
+            ):
                 if event["type"] == "token":
                     full_response += event["content"]
                 elif event["type"] == "tool_end":
@@ -494,12 +547,10 @@ async def stream_agent(
                         "tool": event["tool"],
                         "result": event.get("result", ""),
                         "tokens": event.get("call_tokens", 0),
-                        "cost_eur": event.get("call_cost_eur", 0),
                     })
                 yield event
 
     else:
-        # ── Simple streaming (no tools) — CallbackHandler tracks generation ───
         llm = get_llm(provider, lf_callbacks)
         async for chunk in llm.astream(messages):
             if chunk.content:
@@ -510,9 +561,7 @@ async def stream_agent(
         await save_history(session_id, user_input, full_response,
                            completed_tool_calls or None)
 
-    cost_eur = _calc_cost(provider, usage.input_tokens, usage.output_tokens)
-
-    # ── LangFuse: close trace with final output & usage ───────────────────────
+    # ── LangFuse : fermeture de la trace ──────────────────────────────────────
     trace_id = None
     if lf and lf_trace:
         try:
@@ -521,7 +570,6 @@ async def stream_agent(
                 metadata={
                     "input_tokens": usage.input_tokens,
                     "output_tokens": usage.output_tokens,
-                    "cost_eur": cost_eur,
                     "tool_calls_count": len(completed_tool_calls),
                 },
             )
@@ -534,12 +582,11 @@ async def stream_agent(
         "type": "done",
         "input_tokens": usage.input_tokens,
         "output_tokens": usage.output_tokens,
-        "cost_eur": cost_eur,
         "trace_id": trace_id,
     }
 
 
-# ── Non-streaming (backward compat) ──────────────────────────────────────────
+# ── Non-streaming ─────────────────────────────────────────────────────────────
 
 async def run_agent(agent_id: str, user_input: str, session_id: Optional[str] = None) -> dict:
     full_response = ""

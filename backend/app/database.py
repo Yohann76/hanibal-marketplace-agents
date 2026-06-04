@@ -38,17 +38,6 @@ def init_db():
         """))
         conn.commit()
 
-def save_execution(agent_id: str, session_id: str | None, input_tokens: int, output_tokens: int):
-    try:
-        with engine.connect() as conn:
-            conn.execute(
-                text("INSERT INTO executions (agent_id, session_id, input_tokens, output_tokens) VALUES (:a, :s, :i, :o)"),
-                {"a": agent_id, "s": session_id, "i": input_tokens, "o": output_tokens}
-            )
-            conn.commit()
-    except Exception:
-        pass
-
 
 def upsert_conversation_session(session_id: str, agent_id: str, title: str, input_tokens: int, output_tokens: int):
     try:
