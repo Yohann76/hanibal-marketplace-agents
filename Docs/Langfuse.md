@@ -2,6 +2,13 @@
 
 > **Rôle dans ce projet** : LangFuse est le système de monitoring de toutes les exécutions d'agents. Il enregistre chaque conversation, chaque appel LLM, chaque outil utilisé, avec les tokens consommés, les coûts, les latences — et permet de collecter les retours utilisateurs.
 
+
+Model definition 
+
+name : mistral-small-latest
+input price per token : 0.00000015
+output price per token: 0,00000060
+pattern: (?i)^(mistral-small-latest)$
 ---
 
 ## Pourquoi LangFuse ?
