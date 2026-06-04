@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import logging
 import uuid
 import asyncio
 import httpx
@@ -16,6 +17,7 @@ from app.config import (
 from app.database import engine
 
 AGENTS_DIR = Path(__file__).parent.parent.parent / "agents"
+logger = logging.getLogger(__name__)
 
 
 # ── LangFuse ──────────────────────────────────────────────────────────────────
@@ -43,32 +45,48 @@ def _get_lf():
 
 
 
+# Prompts déjà synchronisés dans cette session — évite de recréer une version à chaque run
+_synced_prompts: set[str] = set()
+
+
 def _resolve_system_prompt(agent_id: str) -> tuple[str, Any]:
     """
     Retourne (texte_prompt, objet_prompt_langfuse|None).
-    Priorité : LangFuse → fichier (auto-sync vers LangFuse au premier appel).
-    Modifier le prompt dans le dashboard LangFuse suffit pour le mettre à jour
-    sans redéployer.
+    Priorité : LangFuse → fichier.
+    La création dans LangFuse n'a lieu qu'une seule fois par démarrage du backend
+    pour éviter de créer une nouvelle version à chaque run.
     """
     file_text = (AGENTS_DIR / agent_id / "system_prompt.txt").read_text()
     lf = _get_lf()
     if not lf:
         return file_text, None
+
+    prompt_name = f"agent-{agent_id}"
+
+    # Cas nominal : prompt existant dans LangFuse
     try:
-        obj = lf.get_prompt(f"agent/{agent_id}", cache_ttl_seconds=60)
+        obj = lf.get_prompt(prompt_name, cache_ttl_seconds=60)
+        logger.info("[prompt] %s → LangFuse v%s", prompt_name, getattr(obj, 'version', '?'))
         return obj.prompt, obj
-    except Exception:
-        # Prompt absent de LangFuse — on le crée depuis le fichier
+    except Exception as e:
+        logger.warning("[prompt] %s → get_prompt échoue (%s)", prompt_name, e)
+
+    # Prompt absent : on le crée une seule fois par session (pas à chaque run)
+    if prompt_name not in _synced_prompts:
+        _synced_prompts.add(prompt_name)
         try:
-            lf.create_prompt(
-                name=f"agent/{agent_id}",
-                prompt=file_text,
-                labels=["production"],
-            )
-            obj = lf.get_prompt(f"agent/{agent_id}", cache_ttl_seconds=60)
+            lf.create_prompt(name=prompt_name, prompt=file_text, labels=["production"])
+            logger.info("[prompt] %s → créé dans LangFuse depuis le fichier", prompt_name)
+        except Exception as e:
+            logger.warning("[prompt] %s → create_prompt échoue (%s)", prompt_name, e)
+        try:
+            obj = lf.get_prompt(prompt_name, cache_ttl_seconds=60)
             return obj.prompt, obj
         except Exception:
-            return file_text, None
+            pass
+
+    logger.warning("[prompt] %s → fallback fichier system_prompt.txt", prompt_name)
+    return file_text, None
 
 
 async def score_trace(
@@ -152,7 +170,7 @@ def load_system_prompt(agent_id: str) -> str:
     lf = _get_lf()
     if lf:
         try:
-            return lf.get_prompt(f"agent/{agent_id}", cache_ttl_seconds=60).prompt
+            return lf.get_prompt(f"agent-{agent_id}", cache_ttl_seconds=60).prompt
         except Exception:
             pass
     return (AGENTS_DIR / agent_id / "system_prompt.txt").read_text()
