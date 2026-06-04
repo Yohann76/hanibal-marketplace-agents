@@ -429,6 +429,139 @@ agent-prospection-hanibal/
 
 ---
 
+## 16. Orchestrateur & Agents Spécialistes — Prompts et outils
+
+### Vue d'ensemble des rôles
+
+```mermaid
+graph TB
+    User(["👤 Hanibal"])
+
+    subgraph Orch["🧠 ORCHESTRATEUR"]
+        OP["System: Tu es le chef d'orchestre de la prospection Hanibal.\nTu reçois un objectif commercial, tu analyses la situation,\ntu délègues aux agents spécialistes dans le bon ordre\net tu consolides les résultats en rapport final.\nTu ne produis aucun message commercial toi-même."]
+    end
+
+    subgraph S1["🔍 Agent Scraper"]
+        S1P["System: Tu enrichis les fiches leads.\nPour une cible donnée, recherche : nom, poste,\nentreprise, LinkedIn, email professionnel, douleurs probables.\nRetourne uniquement des données vérifiées.\nSi tu ne trouves pas, dis-le explicitement."]
+        S1T["🛠 Tavily Search\n🛠 LinkedIn Scraper\n🛠 Email Finder (Hunter.io)\n🛠 Apollo / Clearbit"]
+    end
+
+    subgraph S2["✍️ Agent Copywriter LinkedIn"]
+        S2P["System: Tu rédiges des messages LinkedIn personnalisés.\nMaximum 300 caractères. Tu ouvres une conversation,\ntu ne vends pas. L'accroche cite une douleur précise\ndu lead. Tu n'envoies jamais sans validation humaine."]
+        S2T["📋 Registre offres Hanibal\n📋 Registre personas\n📋 Registre objections"]
+    end
+
+    subgraph S3["📧 Agent Copywriter Email"]
+        S3P["System: Tu rédiges des séquences cold email en 3 temps :\n1. Accroche sur la douleur du lead\n2. Promesse concrète et vérifiable\n3. CTA simple et non intrusif.\nDirect, sans jargon, max 150 mots par email."]
+        S3T["📋 Registre offres Hanibal\n📋 Registre personas\n📋 Messages testés (expériences)"]
+    end
+
+    subgraph S4["📋 Agent Préparateur RDV"]
+        S4P["System: Tu prépares les rendez-vous commerciaux.\nTu produis : un script d'ouverture, 5 questions\nde diagnostic, les 3 objections probables\navec leur réponse. Format structuré, actionnable."]
+        S4T["📋 Registre objections\n📋 Scripts précédents\n📋 Fiche lead enrichie"]
+    end
+
+    subgraph S5["📊 Agent Analyste Retours"]
+        S5P["System: Tu analyses les retours terrain après envoi.\nIdentifie : objections récurrentes, signaux d'intérêt,\nformulations qui fonctionnent ou non.\nPropose des ajustements d'offre ou de message.\nTu ne tires jamais de conclusion définitive seul."]
+        S5T["📋 Journal expériences\n📋 Registre objections\n📋 Historique messages"]
+    end
+
+    User -->|"Objectif : prospecte X"| Orch
+    Orch -->|"1. Enrichis le lead"| S1
+    S1 -->|"LeadData JSON"| Orch
+    Orch -->|"2a. Rédige LinkedIn"| S2
+    Orch -->|"2b. Rédige Email"| S3
+    S2 -->|"LinkedInMessage"| Orch
+    S3 -->|"EmailSequence"| Orch
+    Orch -->|"3. Prépare le RDV"| S4
+    S4 -->|"KitRDV"| Orch
+    Orch -->|"4. Analyse retours"| S5
+    S5 -->|"AnalyseRetours"| Orch
+    Orch -->|"Rapport final"| User
+```
+
+---
+
+### Détail des outputs structurés (Pydantic)
+
+```mermaid
+classDiagram
+    class LeadData {
+        +String nom
+        +String poste
+        +String entreprise
+        +String linkedin_url
+        +String email
+        +List~String~ pain_points
+        +String enrichment_confidence
+    }
+
+    class LinkedInMessage {
+        +String hook
+        +String message
+        +String cta
+        +Int char_count
+        +String persona_targeted
+    }
+
+    class EmailSequence {
+        +String objet
+        +String email_1_accroche
+        +String email_2_promesse
+        +String email_3_cta
+        +String tone
+    }
+
+    class KitRDV {
+        +String script_ouverture
+        +List~String~ questions_diagnostic
+        +List~String~ objections_probables
+        +List~String~ reponses_objections
+    }
+
+    class AnalyseRetours {
+        +List~String~ objections_recurrentes
+        +List~String~ signaux_interet
+        +List~String~ formulations_efficaces
+        +List~String~ ajustements_proposes
+    }
+
+    Orchestrateur --> LeadData : reçoit du Scraper
+    Orchestrateur --> LinkedInMessage : reçoit du Copywriter LI
+    Orchestrateur --> EmailSequence : reçoit du Copywriter Email
+    Orchestrateur --> KitRDV : reçoit du Préparateur RDV
+    Orchestrateur --> AnalyseRetours : reçoit de l Analyste
+```
+
+---
+
+### Garde-fous appliqués à chaque agent
+
+```mermaid
+graph LR
+    subgraph GF["🛡️ Garde-fous communs à tous les agents"]
+        G1["Ne jamais envoyer\nsans validation humaine"]
+        G2["Ne jamais inventer\nune référence client"]
+        G3["Ne jamais promettre\nun ROI non démontré"]
+        G4["Signaler explicitement\nce qui manque"]
+        G5["Produire des livrables\nrelisibles par un humain"]
+    end
+
+    S["🔍 Scraper\n+ Signaler si données\ninsuffisantes ou incertaines"]
+    L["✍️ Copywriter LinkedIn\n+ Max 300 caractères\n+ Pas de vente directe"]
+    E["📧 Copywriter Email\n+ Max 150 mots\n+ CTA non intrusif"]
+    R["📋 Préparateur RDV\n+ Format structuré\n+ Actionnable seul"]
+    A["📊 Analyste\n+ Hypothèses seulement\n+ Pas de conclusions définitives"]
+
+    GF --> S
+    GF --> L
+    GF --> E
+    GF --> R
+    GF --> A
+```
+
+---
+
 ## 15. Ce qu'il reste à implémenter
 
 | Nœud | Statut | Notes |
@@ -443,4 +576,4 @@ agent-prospection-hanibal/
 | **State** | ✅ Défini | Voir section 6 |
 | **Routing** | ✅ Défini | Voir section 11 |
 | **OC.yaml** | ✅ Défini | Voir section 12 |
-| **Registres data** | À créer | offers, personas, objections, sources |
+| **Registres data** | À créer | offers, personas, objections, sources (connaissance pour une organisation) |
