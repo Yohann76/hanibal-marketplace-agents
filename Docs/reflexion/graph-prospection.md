@@ -185,7 +185,9 @@ graph TD
     START([▶ START]) --> orchestrator
 
     orchestrator["🧠 Orchestrateur\n(planifie, délègue)"]
+    ciblage["🎯 Ciblage\n(identifie les cibles)"]
     scraper["🔍 Scraper\n(enrichit le lead)"]
+    persona_builder["👤 Persona Builder\n(formalise le persona)"]
     router{"📡 Router\nquel canal ?"}
     linkedin_writer["✍️ Copywriter LinkedIn\n(rédige le message)"]
     email_writer["✍️ Copywriter Email\n(rédige la séquence)"]
@@ -193,10 +195,13 @@ graph TD
     revise{"🔄 Révision\nnécessaire ?"}
     sender["📤 Sender\n(envoie)"]
     reporter["📋 Reporter\n(génère le rapport)"]
+    capitalisation["💾 Capitalisation\n(met à jour les registres)"]
     END_NODE([⏹ END])
 
-    orchestrator --> scraper
-    scraper --> router
+    orchestrator --> ciblage
+    ciblage --> scraper
+    scraper --> persona_builder
+    persona_builder --> router
 
     router -->|"linkedin_url trouvée"| linkedin_writer
     router -->|"email trouvé"| email_writer
@@ -212,7 +217,8 @@ graph TD
     revise -->|"❌ annulé"| reporter
 
     sender --> reporter
-    reporter --> END_NODE
+    reporter --> capitalisation
+    capitalisation --> END_NODE
 ```
 
 ---
@@ -466,17 +472,38 @@ graph TB
         S5T["📋 Journal expériences\n📋 Registre objections\n📋 Historique messages"]
     end
 
+    subgraph S6["🎯 Agent Ciblage"]
+        S6P["System: Tu identifies les cibles pertinentes pour Hanibal.\nÀ partir de l'objectif commercial, tu proposes :\nsegments prioritaires, types de décideurs,\ncritères de qualification. Tu t'appuies\nuniquement sur les registres autorisés."]
+        S6T["📋 Registre cibles (targets.md)\n📋 Registre personas\n📋 Registre offres"]
+    end
+
+    subgraph S7["👤 Agent Persona Builder"]
+        S7P["System: À partir des données enrichies du lead,\ntu formalises une fiche persona complète :\ndouleurs probables, motivations, objections attendues,\nton de communication adapté.\nTu distingues ce qui est vérifié de ce qui est hypothèse."]
+        S7T["📋 Registre personas\n📋 Registre objections\n📋 LeadData (sortie Scraper)"]
+    end
+
+    subgraph S8["💾 Agent Capitalisation"]
+        S8P["System: Après chaque cycle de prospection,\ntu mets à jour les registres de connaissance :\ntu enregistres le message envoyé, le retour obtenu,\nles objections rencontrées et les décisions prises.\nTu produis une synthèse hebdomadaire actionnable."]
+        S8T["📋 experiments.md (écriture)\n📋 objections.md (enrichissement)\n📋 decision-log.md (écriture)"]
+    end
+
     User -->|"Objectif : prospecte X"| Orch
+    Orch -->|"0. Identifie les cibles"| S6
+    S6 -->|"CiblagePlan"| Orch
     Orch -->|"1. Enrichis le lead"| S1
     S1 -->|"LeadData JSON"| Orch
-    Orch -->|"2a. Rédige LinkedIn"| S2
-    Orch -->|"2b. Rédige Email"| S3
+    Orch -->|"2. Formalise le persona"| S7
+    S7 -->|"PersonaFiche"| Orch
+    Orch -->|"3a. Rédige LinkedIn"| S2
+    Orch -->|"3b. Rédige Email"| S3
     S2 -->|"LinkedInMessage"| Orch
     S3 -->|"EmailSequence"| Orch
-    Orch -->|"3. Prépare le RDV"| S4
+    Orch -->|"4. Prépare le RDV"| S4
     S4 -->|"KitRDV"| Orch
-    Orch -->|"4. Analyse retours"| S5
+    Orch -->|"5. Analyse retours"| S5
     S5 -->|"AnalyseRetours"| Orch
+    Orch -->|"6. Capitalise"| S8
+    S8 -->|"CapitalisationLog"| Orch
     Orch -->|"Rapport final"| User
 ```
 
@@ -526,11 +553,39 @@ classDiagram
         +List~String~ ajustements_proposes
     }
 
+    class CiblagePlan {
+        +List~String~ segments_prioritaires
+        +List~String~ types_decideurs
+        +List~String~ criteres_qualification
+        +String segment_recommande
+    }
+
+    class PersonaFiche {
+        +String nom_type
+        +String role
+        +List~String~ douleurs_verifiees
+        +List~String~ douleurs_hypotheses
+        +List~String~ motivations
+        +List~String~ objections_attendues
+        +String ton_communication
+    }
+
+    class CapitalisationLog {
+        +String message_envoye
+        +String retour_obtenu
+        +List~String~ objections_rencontrees
+        +List~String~ decisions_prises
+        +String synthese_hebdo
+    }
+
+    Orchestrateur --> CiblagePlan : reçoit du Ciblage
     Orchestrateur --> LeadData : reçoit du Scraper
+    Orchestrateur --> PersonaFiche : reçoit du Persona Builder
     Orchestrateur --> LinkedInMessage : reçoit du Copywriter LI
     Orchestrateur --> EmailSequence : reçoit du Copywriter Email
     Orchestrateur --> KitRDV : reçoit du Préparateur RDV
     Orchestrateur --> AnalyseRetours : reçoit de l Analyste
+    Orchestrateur --> CapitalisationLog : reçoit de Capitalisation
 ```
 
 ---
@@ -547,17 +602,23 @@ graph LR
         G5["Produire des livrables\nrelisibles par un humain"]
     end
 
+    C["🎯 Ciblage\n+ Registres autorisés uniquement\n+ Pas d'invention de segments"]
     S["🔍 Scraper\n+ Signaler si données\ninsuffisantes ou incertaines"]
+    PB["👤 Persona Builder\n+ Distinguer vérifié / hypothèse\n+ Pas de projection abusive"]
     L["✍️ Copywriter LinkedIn\n+ Max 300 caractères\n+ Pas de vente directe"]
     E["📧 Copywriter Email\n+ Max 150 mots\n+ CTA non intrusif"]
     R["📋 Préparateur RDV\n+ Format structuré\n+ Actionnable seul"]
     A["📊 Analyste\n+ Hypothèses seulement\n+ Pas de conclusions définitives"]
+    CAP["💾 Capitalisation\n+ Écriture uniquement dans\nles registres autorisés"]
 
+    GF --> C
     GF --> S
+    GF --> PB
     GF --> L
     GF --> E
     GF --> R
     GF --> A
+    GF --> CAP
 ```
 
 ---
@@ -567,13 +628,258 @@ graph LR
 | Nœud | Statut | Notes |
 |---|---|---|
 | `orchestrator` | À faire | LLM + planification |
+| `ciblage` | À faire | Lit targets.md + personas.md → CiblagePlan |
 | `scraper` | À faire | Tavily déjà dispo dans le projet |
+| `persona_builder` | À faire | Lit PersonaFiche depuis LeadData + registres |
 | `linkedin_writer` | À faire | Prompt Pydantic structured output |
 | `email_writer` | À faire | Prompt Pydantic structured output |
 | `human_review` | À faire | Interrupt LangGraph + lecture feedback |
 | `sender` | À faire | API LinkedIn / SMTP |
 | `reporter` | À faire | Résumé structuré |
+| `capitalisation` | À faire | Écrit dans experiments.md + objections.md |
 | **State** | ✅ Défini | Voir section 6 |
 | **Routing** | ✅ Défini | Voir section 11 |
 | **OC.yaml** | ✅ Défini | Voir section 12 |
-| **Registres data** | À créer | offers, personas, objections, sources (connaissance pour une organisation) |
+| **Registres data** | À créer | offers.md, targets.md, personas.md, objections.md, experiments.md |
+
+---
+
+## 17. Gestion des registres — Qui écrit, qui lit, où ?
+
+### Où vivent les registres dans le projet
+
+Les registres sont des fichiers Markdown dans le dossier `connaissance/` de l'agent — déjà lu automatiquement par `agent_runner.py` à chaque run et injecté dans le contexte du LLM.
+
+```
+backend/agents/prospection/
+├── config.json
+├── system_prompt.txt
+├── connaissance/               ← injecté automatiquement dans le contexte
+│   ├── offers.md               ← offres Hanibal
+│   ├── targets.md              ← segments et décideurs cibles
+│   ├── personas.md             ← fiches personas par type
+│   ├── objections.md           ← objections terrain + réponses
+│   ├── experiments.md          ← messages testés + retours
+│   ├── sources.md              ← références autorisées
+│   └── decision-log.md         ← décisions prises
+└── tools/
+```
+
+---
+
+### Qui écrit chaque registre ?
+
+```mermaid
+graph LR
+    subgraph H["👤 Hanibal (humain)"]
+        direction TB
+        H1["Crée et maintient\noffers.md"]
+        H2["Crée et maintient\ntargets.md"]
+        H3["Crée et valide\nsources.md"]
+        H4["Valide et corrige\nce que l'agent écrit"]
+    end
+
+    subgraph A["🤖 Agent Capitalisation"]
+        direction TB
+        A1["Enrichit\nexperiments.md"]
+        A2["Enrichit\nobjections.md"]
+        A3["Écrit\ndecision-log.md"]
+    end
+
+    subgraph AB["🤝 Humain + Agent"]
+        direction TB
+        AB1["personas.md\n(base humaine\n+ enrichie par Persona Builder)"]
+    end
+
+    H --> H1
+    H --> H2
+    H --> H3
+    H --> H4
+    A --> A1
+    A --> A2
+    A --> A3
+    H4 -->|"valide"| A1
+    H4 -->|"valide"| A2
+```
+
+---
+
+### Qui lit chaque registre ?
+
+```mermaid
+graph LR
+    subgraph REG["📋 Registres"]
+        OF["offers.md"]
+        TA["targets.md"]
+        PE["personas.md"]
+        OB["objections.md"]
+        EX["experiments.md"]
+        SO["sources.md"]
+    end
+
+    C["🎯 Ciblage"]
+    SC["🔍 Scraper"]
+    PB["👤 Persona Builder"]
+    LI["✍️ Copywriter LinkedIn"]
+    EM["📧 Copywriter Email"]
+    RDV["📋 Préparateur RDV"]
+    AN["📊 Analyste"]
+    CAP["💾 Capitalisation"]
+
+    OF -->|"lit"| C
+    OF -->|"lit"| LI
+    OF -->|"lit"| EM
+    TA -->|"lit"| C
+    PE -->|"lit"| C
+    PE -->|"lit"| PB
+    PE -->|"lit"| LI
+    PE -->|"lit"| EM
+    OB -->|"lit"| PB
+    OB -->|"lit"| RDV
+    OB -->|"lit"| AN
+    EX -->|"lit"| LI
+    EX -->|"lit"| EM
+    EX -->|"lit"| AN
+    SO -->|"lit"| LI
+    SO -->|"lit"| EM
+```
+
+---
+
+### Cycle de vie d'un registre
+
+```mermaid
+sequenceDiagram
+    actor Human as 👤 Hanibal
+    participant REG as 📋 Registre
+    participant Agent as 🤖 Agent
+    participant CAP as 💾 Capitalisation
+
+    Human->>REG: Crée la base initiale\n(offers.md, targets.md, personas.md)
+    Note over REG: Bootstrap manuel — phase 1
+
+    loop Chaque cycle de prospection
+        Agent->>REG: Lit le registre comme contexte
+        Note over Agent: Le registre enrichit\nle prompt du LLM
+        Agent->>Agent: Produit le livrable\n(message, persona, script...)
+        Human->>Agent: Valide ou corrige
+        CAP->>REG: Écrit les apprentissages\n(experiments.md, objections.md)
+        Human->>REG: Valide et corrige\nce que l'agent a écrit
+    end
+
+    Note over REG: Le registre s'enrichit\nau fil des cycles
+```
+
+---
+
+### Règle de gouvernance des registres
+
+```mermaid
+graph TD
+    R1["📋 offers.md\ntargets.md\nsources.md"]
+    R2["📋 personas.md"]
+    R3["📋 experiments.md\nobjections.md\ndecision-log.md"]
+
+    R1 --> G1["🔒 Écriture humaine uniquement\nL'agent ne modifie jamais ces fichiers\nsans validation explicite"]
+    R2 --> G2["🤝 Base humaine\n+ enrichissement agent supervisé\nHanibal valide chaque ajout"]
+    R3 --> G3["🤖 Écriture agent autorisée\nmais relecture humaine\nhebdomadaire obligatoire"]
+
+    G1 --> V["✅ Seul Hanibal\ncommite les changements"]
+    G2 --> V
+    G3 --> VH["✅ Hanibal valide\navant le prochain cycle"]
+```
+
+---
+
+## 18. Registres par utilisateur — Problème multi-tenant
+
+### Le problème
+
+```mermaid
+graph TD
+    subgraph Actuel["❌ Architecture actuelle — mono-user"]
+        A1["connaissance/\noffers.md\ntargets.md\npersonas.md"]
+        A2["User A (Hanibal)"]
+        A3["User B (Client SaaS)"]
+        A2 -->|"lit"| A1
+        A3 -->|"lit aussi !"| A1
+        A1 -->|"⚠️ données partagées\nentre tous les users"| PROB["Problème :\ntout le monde voit\nles offres et cibles\nde tout le monde"]
+    end
+```
+
+Chaque utilisateur a ses propres offres, ses propres personas, ses propres cibles et ses propres retours terrain — les registres **doivent être isolés par user**.
+
+---
+
+### Option A — Dossiers par organisation (simple, fichiers)
+
+```mermaid
+graph TD
+    subgraph FS["Structure fichiers"]
+        direction TB
+        ROOT["connaissance/"]
+        U1["hanibal/\noffers.md\ntargets.md\npersonas.md"]
+        U2["client-acme/\noffers.md\ntargets.md\npersonas.md"]
+        U3["client-xyz/\noffers.md\ntargets.md\npersonas.md"]
+        ROOT --> U1
+        ROOT --> U2
+        ROOT --> U3
+    end
+
+    REQ["Requête agent\n(org_id: hanibal)"]
+    REQ -->|"charge uniquement\nhanibal/"| U1
+
+    PROS["✅ Simple\n✅ Lisible / éditable"]
+    CONS["❌ Pas scalable au delà\nde quelques dizaines\nd'organisations\n❌ Pas de UI pour éditer"]
+```
+
+---
+
+### Option B — Base de données par organisation (scalable, SaaS)
+
+```mermaid
+graph TD
+    subgraph DB["PostgreSQL — table registres"]
+        T["registres\n(org_id, type, content, updated_at)"]
+        R1["org: hanibal | type: offers | content: ..."]
+        R2["org: hanibal | type: personas | content: ..."]
+        R3["org: acme | type: offers | content: ..."]
+        R4["org: acme | type: personas | content: ..."]
+        T --> R1
+        T --> R2
+        T --> R3
+        T --> R4
+    end
+
+    subgraph API["Backend FastAPI"]
+        EP["GET /registres/{org_id}\nretourne les registres\nde l'organisation"]
+    end
+
+    subgraph Agent["Agent Prospection"]
+        AR["Charge les registres\nde org_id au runtime\net les injecte\ndans le contexte LLM"]
+    end
+
+    DB --> EP --> Agent
+
+    PROS["✅ Scalable\n✅ UI possible (dashboard)\n✅ Versionnable\n✅ Multi-tenant natif"]
+    CONS["❌ Plus complexe\n❌ Nécessite une UI\nd'édition des registres"]
+```
+
+---
+
+### Recommandation selon le stade du projet
+
+```mermaid
+graph LR
+    S1["🔬 MVP interne\nHanibal seul"]
+    S2["👥 Bêta\n2 à 10 clients"]
+    S3["🚀 SaaS\n10+ clients"]
+
+    S1 -->|"Option A\nDossiers fichiers\npar org"| A["connaissance/\nhanibal/\nclient-x/"]
+
+    S2 -->|"Option B\nBase de données\n+ API"| B["table registres\n(org_id, type, content)"]
+
+    S3 -->|"Option C\nLangFuse\nPrompt Management"| C["LangFuse projet\npar organisation\n+ versioning"]
+```
+
+> **Aujourd'hui** : Option A suffit pour le MVP interne Hanibal. L'architecture doit être pensée pour migrer vers l'Option B dès les premiers clients SaaS — ce qui implique d'ajouter `org_id` dans le State dès maintenant.
