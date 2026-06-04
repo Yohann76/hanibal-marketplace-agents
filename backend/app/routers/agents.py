@@ -12,12 +12,7 @@ from pydantic import BaseModel
 logger = logging.getLogger(__name__)
 from app.services import agent_runner, gmail_service
 from app.database import upsert_conversation_session
-from app.config import (
-    BACKEND_PUBLIC_URL,
-    MISTRAL_MODEL, CLAUDE_MODEL,
-    MISTRAL_COST_INPUT_PER_M, MISTRAL_COST_OUTPUT_PER_M,
-    CLAUDE_COST_INPUT_PER_M, CLAUDE_COST_OUTPUT_PER_M,
-)
+from app.config import BACKEND_PUBLIC_URL, MISTRAL_MODEL, CLAUDE_MODEL
 
 router = APIRouter()
 AGENTS_DIR = Path("agents")
@@ -231,7 +226,7 @@ async def get_config():
     return {
         "gmail_auth_url": f"{BACKEND_PUBLIC_URL}/api/gmail/auth",
         "models": {
-            "mistral": {"name": MISTRAL_MODEL, "cost_input_per_m": MISTRAL_COST_INPUT_PER_M, "cost_output_per_m": MISTRAL_COST_OUTPUT_PER_M},
-            "claude":  {"name": CLAUDE_MODEL,  "cost_input_per_m": CLAUDE_COST_INPUT_PER_M,  "cost_output_per_m": CLAUDE_COST_OUTPUT_PER_M},
+            "mistral": {"name": MISTRAL_MODEL},
+            "claude":  {"name": CLAUDE_MODEL},
         },
     }

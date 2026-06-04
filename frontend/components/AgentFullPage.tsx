@@ -34,8 +34,6 @@ interface ToolCallRecord {
   tool: string
   status: 'running' | 'done'
   result?: string
-  tokens?: number
-  cost_eur?: number
 }
 
 interface ChatMessage {
@@ -43,11 +41,6 @@ interface ChatMessage {
   content: string
   tool_calls?: ToolCallRecord[]
   trace_id?: string
-}
-
-interface CostConfig {
-  mistral: { cost_input_per_m: number; cost_output_per_m: number }
-  claude:  { cost_input_per_m: number; cost_output_per_m: number }
 }
 
 interface ConversationSession {
@@ -58,18 +51,6 @@ interface ConversationSession {
   input_tokens: number
   output_tokens: number
   updated_at: string
-}
-
-function fmtTokens(n: number): string {
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`
-  return String(n)
-}
-
-function fmtCost(eur: number): string {
-  if (eur < 0.000001) return '< €0.000001'
-  if (eur < 0.001) return `€${eur.toFixed(6)}`
-  if (eur < 0.01)  return `€${eur.toFixed(4)}`
-  return `€${eur.toFixed(3)}`
 }
 
 type Tab = 'use' | 'config' | 'docs' | 'knowledge' | 'tools'
@@ -328,17 +309,6 @@ function ToolCallResult({ tc, toolsInfo }: { tc: ToolCallRecord; toolsInfo: Tool
         {/* Done: meta + toggle */}
         {isDone && (
           <div className="ml-auto flex items-center gap-1.5 shrink-0">
-            {tc.tokens !== undefined && tc.tokens > 0 && (
-              <span className="flex items-center gap-1 text-[11px] font-mono text-gray-400 bg-gray-800 border border-gray-700/80 px-1.5 py-0.5 rounded-md">
-                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-gray-500"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                {fmtTokens(tc.tokens)}
-              </span>
-            )}
-            {tc.cost_eur !== undefined && tc.cost_eur > 0 && (
-              <span className="text-[11px] font-mono text-emerald-400 bg-emerald-950/50 border border-emerald-900/60 px-1.5 py-0.5 rounded-md">
-                {fmtCost(tc.cost_eur)}
-              </span>
-            )}
             {lineCount > 0 && (
               <span className="text-[11px] text-gray-600">{lineCount}L</span>
             )}
@@ -420,18 +390,12 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [activeTool, setActiveTool] = useState<string | null>(null)
-  const [costConfig, setCostConfig] = useState<CostConfig | null>(null)
   const [gmailConnected, setGmailConnected] = useState<boolean | null>(null)
   const hasGmail = toolsInfo.some(t => t.name === 'gmail_read')
   const bottomRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const shouldAutoScroll = useRef(true)
 
-  useEffect(() => {
-    fetch('/api/config').then(r => r.json()).then(d => {
-      if (d.models) setCostConfig(d.models)
-    }).catch(() => {})
-  }, [])
 
   useEffect(() => {
     if (!hasGmail) return
@@ -481,7 +445,6 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
             tool: tc.tool,
             status: 'done' as const,
             result: tc.result,
-            tokens: tc.tokens ?? 0,
           })),
         }))
         setMessages(msgs)
@@ -569,7 +532,7 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
             const last = msgs[msgs.length - 1]
             const tcs = (last.tool_calls ?? []).map(tc =>
               tc.tool === event.tool && tc.status === 'running'
-                ? { ...tc, status: 'done' as const, result: event.result, tokens: event.call_tokens, cost_eur: event.call_cost_eur }
+                ? { ...tc, status: 'done' as const, result: event.result }
                 : tc
             )
             msgs[msgs.length - 1] = { ...last, tool_calls: tcs }
@@ -647,11 +610,6 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
 
           {sessions.map(s => {
             const isActive = s.session_id === activeSessionId && !isNewSession
-            const totalTokens = s.input_tokens + s.output_tokens
-            const rates = costConfig?.[config.provider as keyof CostConfig] ?? costConfig?.mistral
-            const cost = rates && totalTokens > 0
-              ? (s.input_tokens * rates.cost_input_per_m + s.output_tokens * rates.cost_output_per_m) / 1_000_000
-              : null
 
             return (
               <button
@@ -675,20 +633,6 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
                   <span>{s.message_count} msg</span>
                 </div>
 
-                {/* Tokens + cost */}
-                {totalTokens > 0 && (
-                  <div className="flex items-center gap-1.5">
-                    <span className="flex items-center gap-1 text-[11px] font-mono text-gray-500 bg-gray-800/60 border border-gray-700/50 px-1.5 py-0.5 rounded">
-                      <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-gray-600"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                      {fmtTokens(totalTokens)}
-                    </span>
-                    {cost !== null && cost > 0 && (
-                      <span className="text-[11px] font-mono text-emerald-500 bg-emerald-950/40 border border-emerald-900/50 px-1.5 py-0.5 rounded">
-                        {fmtCost(cost)}
-                      </span>
-                    )}
-                  </div>
-                )}
               </button>
             )
           })}

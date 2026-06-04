@@ -2,18 +2,19 @@
 
 # Feature 
 
+--- Account ---
 - add user account 
 - add memory per user account 
-- add super configuration (prompt system, right...) per user account 
-- add usage per user account (and limit)
+- add super configuration per user account 
 
 - Right for each agent (coched case, see email, send email, search internet...)(per user)
 
+- for each agent, display diagram fonctionnal user prompt -> different tool usage, response... in mermaid diagram (in documentation page)
 
 # Agent strategy 
 
-- different response template per agent? 
-- multi-agent ? 
+- Different response template per agent? 
+- Multi-agent ? 
 
 # Explore
 
@@ -21,7 +22,7 @@
 - See Qwen with API KEY
 - Obsidian for database restructured (and create fiche?)
 - Local LLM with docker for select provider (mistral api, or local model LLM)
-- Langfuse deploy
+- Langfuse version 
 
 
 

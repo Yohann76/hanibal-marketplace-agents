@@ -15,8 +15,3 @@ langfuse_port:  42003
 mistral_model:             "mistral-small-latest"
 claude_model:              "claude-sonnet-4-6"
 
-# Coûts en EUR par million de tokens
-mistral_cost_input_per_m:  "0.15"
-mistral_cost_output_per_m: "0.60"
-claude_cost_input_per_m:   "2.76"
-claude_cost_output_per_m:  "13.80"

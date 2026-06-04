@@ -25,11 +25,3 @@ LANGFUSE_PUBLIC_KEY = os.getenv("LANGFUSE_PUBLIC_KEY", "")
 LANGFUSE_SECRET_KEY = os.getenv("LANGFUSE_SECRET_KEY", "")
 LANGFUSE_HOST       = os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com")
 
-# ── Costs in EUR per million tokens ──────────────────────────────────────────
-# Mistral Small Latest: $0.10 input / $0.30 output  → ×0.92 EUR/USD
-MISTRAL_COST_INPUT_PER_M  = float(os.getenv("MISTRAL_COST_INPUT_PER_M",  "0.09"))
-MISTRAL_COST_OUTPUT_PER_M = float(os.getenv("MISTRAL_COST_OUTPUT_PER_M", "0.28"))
-
-# Claude Sonnet 4.6: $3.00 input / $15.00 output  → ×0.92 EUR/USD
-CLAUDE_COST_INPUT_PER_M   = float(os.getenv("CLAUDE_COST_INPUT_PER_M",   "2.76"))
-CLAUDE_COST_OUTPUT_PER_M  = float(os.getenv("CLAUDE_COST_OUTPUT_PER_M",  "13.80"))

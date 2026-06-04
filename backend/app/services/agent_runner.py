@@ -1,4 +1,3 @@
-import base64
 import importlib.util
 import json
 import uuid
@@ -12,8 +11,6 @@ from sqlalchemy import text
 from app.config import (
     DATABASE_URL, MISTRAL_API_KEY, ANTHROPIC_API_KEY,
     MISTRAL_MODEL, CLAUDE_MODEL,
-    MISTRAL_COST_INPUT_PER_M, MISTRAL_COST_OUTPUT_PER_M,
-    CLAUDE_COST_INPUT_PER_M, CLAUDE_COST_OUTPUT_PER_M,
     LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, LANGFUSE_HOST,
 )
 from app.database import engine
@@ -44,40 +41,6 @@ def _get_lf():
     return _lf
 
 
-async def register_models_in_langfuse():
-    """
-    Enregistre Mistral et Claude dans LangFuse au démarrage.
-    LangFuse calcule ensuite automatiquement les coûts sur chaque génération.
-    """
-    if not LANGFUSE_PUBLIC_KEY or not LANGFUSE_SECRET_KEY:
-        return
-    credentials = base64.b64encode(f"{LANGFUSE_PUBLIC_KEY}:{LANGFUSE_SECRET_KEY}".encode()).decode()
-    models = [
-        {
-            "modelName": MISTRAL_MODEL,
-            "matchPattern": f"(?i)^{MISTRAL_MODEL}$",
-            "unit": "TOKENS",
-            "inputPrice": MISTRAL_COST_INPUT_PER_M / 1_000_000,
-            "outputPrice": MISTRAL_COST_OUTPUT_PER_M / 1_000_000,
-        },
-        {
-            "modelName": CLAUDE_MODEL,
-            "matchPattern": f"(?i)^{CLAUDE_MODEL}$",
-            "unit": "TOKENS",
-            "inputPrice": CLAUDE_COST_INPUT_PER_M / 1_000_000,
-            "outputPrice": CLAUDE_COST_OUTPUT_PER_M / 1_000_000,
-        },
-    ]
-    async with httpx.AsyncClient(timeout=10) as client:
-        for model in models:
-            try:
-                await client.post(
-                    f"{LANGFUSE_HOST}/api/public/models",
-                    headers={"Authorization": f"Basic {credentials}"},
-                    json=model,
-                )
-            except Exception:
-                pass
 
 
 def _resolve_system_prompt(agent_id: str) -> tuple[str, Any]:
