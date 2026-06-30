@@ -153,11 +153,10 @@ async def _resolve_input(agent_id: str, body: RunRequest) -> str:
 
 
 @router.post("/agents/{agent_id}/run")
-async def run_agent(agent_id: str, body: RunRequest, current_user: dict | None = Depends(get_optional_user)):
-    if current_user:
-        perms = get_agent_permissions(current_user["id"], agent_id)
-        if not perms["can_access"]:
-            raise HTTPException(403, "Accès refusé à cet agent")
+async def run_agent(agent_id: str, body: RunRequest, current_user: dict = Depends(get_current_user)):
+    perms = get_agent_permissions(current_user["id"], agent_id)
+    if not perms["can_access"]:
+        raise HTTPException(403, "Accès refusé à cet agent")
     user_content = await _resolve_input(agent_id, body)
     try:
         result = await agent_runner.run_agent(
@@ -174,22 +173,21 @@ async def run_agent(agent_id: str, body: RunRequest, current_user: dict | None =
         upsert_conversation_session(
             body.session_id, agent_id, title,
             result["input_tokens"], result["output_tokens"],
-            user_id=current_user["id"] if current_user else None,
+            user_id=current_user["id"],
         )
 
     return result
 
 
 @router.post("/agents/{agent_id}/stream")
-async def stream_agent(agent_id: str, body: RunRequest, current_user: dict | None = Depends(get_optional_user)):
-    if current_user:
-        perms = get_agent_permissions(current_user["id"], agent_id)
-        if not perms["can_access"]:
-            raise HTTPException(403, "Accès refusé à cet agent")
+async def stream_agent(agent_id: str, body: RunRequest, current_user: dict = Depends(get_current_user)):
+    perms = get_agent_permissions(current_user["id"], agent_id)
+    if not perms["can_access"]:
+        raise HTTPException(403, "Accès refusé à cet agent")
     user_content = await _resolve_input(agent_id, body)
 
     title = (body.input or "")[:80] or f"Session {agent_id}"
-    uid = current_user["id"] if current_user else None
+    uid = current_user["id"]
 
     async def generate():
         try:

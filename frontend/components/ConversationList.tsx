@@ -12,13 +12,8 @@ interface ConversationSession {
   output_tokens: number
   created_at: string
   updated_at: string
-}
-
-const AGENT_ICONS: Record<string, string> = {
-  'assistant-gestion': '🤖',
-  'seo-analysis': '🤖',
-  'vulgarisateur': '🤖',
-  'prospection': '🤖',
+  user_name?: string
+  user_email?: string
 }
 
 function timeAgo(dateStr: string) {
@@ -32,13 +27,23 @@ function timeAgo(dateStr: string) {
   return `il y a ${days}j`
 }
 
-export default function ConversationList({ conversations }: { conversations: ConversationSession[] }) {
+export default function ConversationList({
+  conversations,
+  showUser = false,
+}: {
+  conversations: ConversationSession[]
+  showUser?: boolean
+}) {
   const [filter, setFilter] = useState('')
 
   if (conversations.length === 0) {
     return (
       <div className="text-center py-20 text-gray-600">
-        <p className="text-4xl mb-4">💬</p>
+        <div className="w-12 h-12 rounded-2xl bg-gray-900 border border-gray-800 flex items-center justify-center mx-auto mb-4">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-600">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
         <p className="text-sm">Aucune conversation pour l'instant.</p>
         <p className="text-xs mt-2">Lancez un agent pour commencer.</p>
       </div>
@@ -47,7 +52,8 @@ export default function ConversationList({ conversations }: { conversations: Con
 
   const filtered = conversations.filter(c =>
     c.title?.toLowerCase().includes(filter.toLowerCase()) ||
-    c.agent_id.toLowerCase().includes(filter.toLowerCase())
+    c.agent_id.toLowerCase().includes(filter.toLowerCase()) ||
+    (showUser && c.user_name?.toLowerCase().includes(filter.toLowerCase()))
   )
 
   const grouped = filtered.reduce<Record<string, ConversationSession[]>>((acc, c) => {
@@ -64,7 +70,7 @@ export default function ConversationList({ conversations }: { conversations: Con
         </svg>
         <input
           type="text"
-          placeholder="Filtrer les conversations..."
+          placeholder={showUser ? "Filtrer par titre, agent ou utilisateur…" : "Filtrer les conversations…"}
           value={filter}
           onChange={e => setFilter(e.target.value)}
           className="w-full bg-gray-900 border border-gray-700 focus:border-blue-500 focus:outline-none text-white placeholder-gray-500 rounded-xl pl-9 pr-4 py-2.5 text-sm"
@@ -74,7 +80,9 @@ export default function ConversationList({ conversations }: { conversations: Con
       {Object.entries(grouped).map(([agentId, sessions]) => (
         <div key={agentId}>
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">{AGENT_ICONS[agentId] ?? '🤖'}</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-600">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
             <h2 className="text-gray-400 text-xs uppercase tracking-widest font-medium">{agentId}</h2>
             <span className="text-xs text-gray-700">{sessions.length} conversation{sessions.length !== 1 ? 's' : ''}</span>
           </div>
@@ -90,7 +98,17 @@ export default function ConversationList({ conversations }: { conversations: Con
                   <p className="text-white text-sm font-medium truncate group-hover:text-blue-400 transition-colors">
                     {s.title || 'Conversation sans titre'}
                   </p>
-                  <p className="text-gray-600 text-xs mt-0.5 font-mono truncate">{s.session_id}</p>
+                  {showUser && s.user_name && (
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-600 shrink-0">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                      </svg>
+                      <span className="text-[11px] text-gray-500 truncate">{s.user_name}</span>
+                    </div>
+                  )}
+                  {!showUser && (
+                    <p className="text-gray-600 text-[11px] mt-0.5 font-mono truncate">{s.session_id.slice(0, 16)}…</p>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-4 shrink-0 text-xs text-gray-600">
@@ -100,7 +118,7 @@ export default function ConversationList({ conversations }: { conversations: Con
                     </svg>
                     {s.message_count}
                   </span>
-                  <span>{(s.input_tokens + s.output_tokens).toLocaleString()} tokens</span>
+                  <span>{(s.input_tokens + s.output_tokens).toLocaleString()} tok</span>
                   <span>{timeAgo(s.updated_at)}</span>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-700 group-hover:text-gray-400 transition-colors">
                     <polyline points="9 18 15 12 9 6"/>

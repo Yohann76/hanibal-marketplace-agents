@@ -7,7 +7,7 @@
 - add user account 
 - add memory (history session) per user account 
 - add super configuration per user account (feature, provider, right)
-- Right for each agent (coched case, see email, send email, search internet...)(per user)
+- Right (coched case) for each agent (coched case, see email, send email, search internet...)(per user)
 - for each agent, display diagram fonctionnal user prompt -> different tool usage, response... in mermaid diagram (in documentation agent page)
 
 --- Agent ---

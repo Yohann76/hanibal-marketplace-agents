@@ -131,20 +131,45 @@ def upsert_conversation_session(
 
 
 def list_conversations(agent_id: str | None = None, user_id: int | None = None) -> list[dict]:
+    """Conversations d'un utilisateur (filtrées par user_id), avec infos user."""
     try:
         with engine.connect() as conn:
             conditions, params = [], {}
             if agent_id:
-                conditions.append("agent_id = :a")
+                conditions.append("cs.agent_id = :a")
                 params["a"] = agent_id
             if user_id is not None:
-                conditions.append("user_id = :uid")
+                conditions.append("cs.user_id = :uid")
                 params["uid"] = user_id
             where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
-            rows = conn.execute(
-                text(f"SELECT * FROM conversation_sessions {where} ORDER BY updated_at DESC"),
-                params,
-            ).mappings().all()
+            rows = conn.execute(text(f"""
+                SELECT cs.*, u.name AS user_name, u.email AS user_email
+                FROM conversation_sessions cs
+                LEFT JOIN users u ON u.id = cs.user_id
+                {where}
+                ORDER BY cs.updated_at DESC
+            """), params).mappings().all()
+            return [dict(r) for r in rows]
+    except Exception:
+        return []
+
+
+def list_conversations_org(org_id: int, agent_id: str | None = None) -> list[dict]:
+    """Toutes les conversations d'une organisation (vue owner), avec infos user."""
+    try:
+        with engine.connect() as conn:
+            params: dict = {"org_id": org_id}
+            agent_filter = "AND cs.agent_id = :a" if agent_id else ""
+            if agent_id:
+                params["a"] = agent_id
+            rows = conn.execute(text(f"""
+                SELECT cs.*, u.name AS user_name, u.email AS user_email
+                FROM conversation_sessions cs
+                LEFT JOIN users u ON u.id = cs.user_id
+                WHERE u.organisation_id = :org_id
+                  {agent_filter}
+                ORDER BY cs.updated_at DESC
+            """), params).mappings().all()
             return [dict(r) for r in rows]
     except Exception:
         return []

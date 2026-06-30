@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { generateUUID } from '../lib/uuid'
 import { readStream } from '../lib/stream'
+import { getToken } from '../lib/auth'
+import { useAuth } from './AuthProvider'
 import Link from 'next/link'
 import { AgentConfig } from './AgentCard'
 import MarkdownResult from './MarkdownResult'
@@ -80,6 +82,8 @@ export default function AgentFullPage({ detail }: { detail: AgentDetail }) {
   const hasKnowledge = knowledge && knowledge.length > 0
   const hasTools = tools_info.length > 0
   const isLocked = user_can_access === false
+  const { user } = useAuth()
+  const isAuthenticated = !!user
 
   return (
     <div className="h-screen bg-gray-950 text-white flex flex-col overflow-hidden">
@@ -163,7 +167,23 @@ export default function AgentFullPage({ detail }: { detail: AgentDetail }) {
       </nav>
 
       {tab === 'use' ? (
-        isLocked ? (
+        !isAuthenticated ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center max-w-sm px-6">
+              <div className="w-14 h-14 rounded-2xl bg-gray-900 border border-gray-800 flex items-center justify-center mx-auto mb-4">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                </svg>
+              </div>
+              <h3 className="text-sm font-semibold text-white mb-2">Connexion requise</h3>
+              <p className="text-xs text-gray-500 leading-relaxed mb-4">Vous devez être connecté pour utiliser cet agent.</p>
+              <div className="flex gap-2 justify-center">
+                <Link href="/login" className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg transition-colors font-medium">Se connecter</Link>
+                <Link href="/register" className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded-lg transition-colors">S'inscrire</Link>
+              </div>
+            </div>
+          </div>
+        ) : isLocked ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center max-w-sm px-6">
               <div className="w-14 h-14 rounded-2xl bg-gray-900 border border-gray-800 flex items-center justify-center mx-auto mb-4">
@@ -173,7 +193,7 @@ export default function AgentFullPage({ detail }: { detail: AgentDetail }) {
                 </svg>
               </div>
               <h3 className="text-sm font-semibold text-white mb-2">Accès restreint</h3>
-              <p className="text-xs text-gray-500 leading-relaxed">Vous n'avez pas accès à cet agent. Contactez un administrateur pour demander l'accès.</p>
+              <p className="text-xs text-gray-500 leading-relaxed">Vous n'avez pas accès à cet agent. Contactez votre owner pour demander l'accès.</p>
             </div>
           </div>
         ) : (
@@ -436,7 +456,10 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
 
   const fetchSessions = useCallback(async () => {
     try {
-      const res = await fetch(`/api/conversations?agent_id=${config.id}`)
+      const token = getToken()
+      const res = await fetch(`/api/conversations?agent_id=${config.id}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
       if (res.ok) setSessions(await res.json())
     } catch {}
   }, [config.id])
@@ -455,7 +478,10 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
     setError(null)
     setLoadingHistory(true)
     try {
-      const res = await fetch(`/api/conversations/${sessionId}/messages`)
+      const token = getToken()
+      const res = await fetch(`/api/conversations/${sessionId}/messages`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
       if (res.ok) {
         const data = await res.json()
         const msgs: ChatMessage[] = (data.messages ?? []).map((m: any) => ({
@@ -518,9 +544,13 @@ function UseTab({ config, toolsInfo }: { config: AgentConfig; toolsInfo: ToolInf
     setActiveTool(null)
 
     try {
+      const token = getToken()
       const res = await fetch(`/api/agents/${config.id}/stream`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify(buildBody()),
       })
       if (!res.ok) {
