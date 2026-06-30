@@ -7,7 +7,9 @@ interface AuthContextValue {
   user: User | null
   token: string | null
   isLoading: boolean
-  isAdmin: boolean
+  isAdmin: boolean    // rôle 'admin' uniquement — gestion de l'application
+  isOwner: boolean    // rôle 'owner' — gestion de son organisation
+  canManage: boolean  // isAdmin || isOwner
   login: (token: string, user: User) => void
   logout: () => void
   refresh: () => Promise<void>
@@ -18,6 +20,8 @@ const AuthContext = createContext<AuthContextValue>({
   token: null,
   isLoading: true,
   isAdmin: false,
+  isOwner: false,
+  canManage: false,
   login: () => {},
   logout: () => {},
   refresh: async () => {},
@@ -34,10 +38,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
   const refresh = useCallback(async () => {
     const t = getToken()
-    if (!t) {
-      setIsLoading(false)
-      return
-    }
+    if (!t) { setIsLoading(false); return }
     const u = await fetchCurrentUser(t)
     if (u) {
       setUser(u)
@@ -50,9 +51,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     setIsLoading(false)
   }, [])
 
-  useEffect(() => {
-    refresh()
-  }, [refresh])
+  useEffect(() => { refresh() }, [refresh])
 
   const login = useCallback((t: string, u: User) => {
     setToken(t)
@@ -66,10 +65,12 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     setTokenState(null)
   }, [])
 
-  const isAdmin = user?.role === 'org_admin' || user?.role === 'super_admin'
+  const isAdmin = user?.role === 'admin'
+  const isOwner = user?.role === 'owner'
+  const canManage = isAdmin || isOwner
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, isAdmin, login, logout, refresh }}>
+    <AuthContext.Provider value={{ user, token, isLoading, isAdmin, isOwner, canManage, login, logout, refresh }}>
       {children}
     </AuthContext.Provider>
   )

@@ -5,6 +5,7 @@ from app.config import DATABASE_URL
 _db_url = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 engine = create_engine(_db_url)
 
+
 def init_db():
     with engine.connect() as conn:
         conn.execute(text("""
@@ -44,7 +45,7 @@ def init_db():
                 password_hash VARCHAR(255) NOT NULL,
                 name VARCHAR(200) NOT NULL,
                 organisation_id INT REFERENCES organisations(id) DEFAULT 1,
-                role VARCHAR(50) NOT NULL DEFAULT 'user',
+                role VARCHAR(50) NOT NULL DEFAULT 'member',
                 created_at TIMESTAMP DEFAULT NOW(),
                 updated_at TIMESTAMP DEFAULT NOW()
             )
@@ -79,7 +80,7 @@ def init_db():
                 updated_at TIMESTAMP DEFAULT NOW()
             )
         """))
-        # Migration douce : ajouter user_id si la colonne n'existe pas encore
+        # Migration douce : colonne user_id sur conversations existantes
         conn.execute(text("""
             DO $$
             BEGIN
@@ -92,8 +93,16 @@ def init_db():
                 END IF;
             END$$
         """))
+        # Migration douce : renommage des anciens rôles
+        conn.execute(text("""
+            UPDATE users SET role = 'member'      WHERE role = 'user';
+            UPDATE users SET role = 'owner'       WHERE role = 'org_admin';
+            UPDATE users SET role = 'admin'       WHERE role = 'super_admin';
+        """))
         conn.commit()
 
+
+# ── Conversations ──────────────────────────────────────────────────────────────
 
 def upsert_conversation_session(
     session_id: str,
@@ -114,7 +123,8 @@ def upsert_conversation_session(
                     input_tokens  = conversation_sessions.input_tokens + :it,
                     output_tokens = conversation_sessions.output_tokens + :ot,
                     updated_at    = NOW()
-            """), {"sid": session_id, "aid": agent_id, "uid": user_id, "title": title, "it": input_tokens, "ot": output_tokens})
+            """), {"sid": session_id, "aid": agent_id, "uid": user_id,
+                   "title": title, "it": input_tokens, "ot": output_tokens})
             conn.commit()
     except Exception:
         pass
@@ -123,8 +133,7 @@ def upsert_conversation_session(
 def list_conversations(agent_id: str | None = None, user_id: int | None = None) -> list[dict]:
     try:
         with engine.connect() as conn:
-            conditions = []
-            params: dict = {}
+            conditions, params = [], {}
             if agent_id:
                 conditions.append("agent_id = :a")
                 params["a"] = agent_id
@@ -141,21 +150,64 @@ def list_conversations(agent_id: str | None = None, user_id: int | None = None) 
         return []
 
 
-# ── User helpers ───────────────────────────────────────────────────────────────
+# ── Organisations ──────────────────────────────────────────────────────────────
 
-def create_user(email: str, password_hash: str, name: str) -> dict | None:
+def list_orgs() -> list[dict]:
+    try:
+        with engine.connect() as conn:
+            rows = conn.execute(
+                text("SELECT id, name, slug, created_at FROM organisations ORDER BY created_at")
+            ).mappings().all()
+            return [dict(r) for r in rows]
+    except Exception:
+        return []
+
+
+def get_org_by_id(org_id: int) -> dict | None:
+    try:
+        with engine.connect() as conn:
+            row = conn.execute(
+                text("SELECT id, name, slug, created_at FROM organisations WHERE id = :id"),
+                {"id": org_id},
+            ).mappings().first()
+            return dict(row) if row else None
+    except Exception:
+        return None
+
+
+def create_org(name: str, slug: str) -> dict | None:
     try:
         with engine.connect() as conn:
             row = conn.execute(text("""
-                INSERT INTO users (email, password_hash, name)
-                VALUES (:email, :ph, :name)
+                INSERT INTO organisations (name, slug) VALUES (:name, :slug)
+                RETURNING id, name, slug, created_at
+            """), {"name": name, "slug": slug}).mappings().first()
+            conn.commit()
+            return dict(row) if row else None
+    except Exception:
+        return None
+
+
+# ── Users ──────────────────────────────────────────────────────────────────────
+
+def create_user(
+    email: str,
+    password_hash: str,
+    name: str,
+    organisation_id: int = 1,
+    role: str = "member",
+) -> dict | None:
+    try:
+        with engine.connect() as conn:
+            row = conn.execute(text("""
+                INSERT INTO users (email, password_hash, name, organisation_id, role)
+                VALUES (:email, :ph, :name, :org_id, :role)
                 RETURNING id, email, name, role, organisation_id, created_at
-            """), {"email": email, "ph": password_hash, "name": name}).mappings().first()
+            """), {"email": email, "ph": password_hash, "name": name,
+                   "org_id": organisation_id, "role": role}).mappings().first()
             if row:
-                user = dict(row)
-                conn.execute(text("""
-                    INSERT INTO user_config (user_id) VALUES (:uid)
-                """), {"uid": user["id"]})
+                conn.execute(text("INSERT INTO user_config (user_id) VALUES (:uid)"),
+                             {"uid": row["id"]})
             conn.commit()
             return dict(row) if row else None
     except Exception:
@@ -198,7 +250,8 @@ def get_user_config(user_id: int) -> dict:
         return {"preferred_provider": "mistral", "features": {}}
 
 
-def update_user_config(user_id: int, preferred_provider: str | None = None, features: dict | None = None):
+def update_user_config(user_id: int, preferred_provider: str | None = None,
+                       features: dict | None = None):
     try:
         with engine.connect() as conn:
             if preferred_provider is not None:
@@ -216,40 +269,53 @@ def update_user_config(user_id: int, preferred_provider: str | None = None, feat
         pass
 
 
-def update_user(user_id: int, name: str | None = None, role: str | None = None):
+def update_user(user_id: int, name: str | None = None, role: str | None = None,
+                organisation_id: int | None = None):
     try:
         with engine.connect() as conn:
             if name is not None:
-                conn.execute(text("""
-                    UPDATE users SET name = :n, updated_at = NOW() WHERE id = :uid
-                """), {"n": name, "uid": user_id})
+                conn.execute(text("UPDATE users SET name = :n, updated_at = NOW() WHERE id = :uid"),
+                             {"n": name, "uid": user_id})
             if role is not None:
-                conn.execute(text("""
-                    UPDATE users SET role = :r, updated_at = NOW() WHERE id = :uid
-                """), {"r": role, "uid": user_id})
+                conn.execute(text("UPDATE users SET role = :r, updated_at = NOW() WHERE id = :uid"),
+                             {"r": role, "uid": user_id})
+            if organisation_id is not None:
+                conn.execute(text("UPDATE users SET organisation_id = :o, updated_at = NOW() WHERE id = :uid"),
+                             {"o": organisation_id, "uid": user_id})
             conn.commit()
     except Exception:
         pass
 
 
-def list_users() -> list[dict]:
+def list_users(org_id: int | None = None) -> list[dict]:
+    """Returns all users joined with their organisation name."""
     try:
         with engine.connect() as conn:
-            rows = conn.execute(
-                text("SELECT id, email, name, role, organisation_id, created_at FROM users ORDER BY created_at DESC")
-            ).mappings().all()
+            where = "WHERE u.organisation_id = :org_id" if org_id is not None else ""
+            params = {"org_id": org_id} if org_id is not None else {}
+            rows = conn.execute(text(f"""
+                SELECT u.id, u.email, u.name, u.role, u.organisation_id,
+                       u.created_at, o.name AS organisation_name
+                FROM users u
+                LEFT JOIN organisations o ON o.id = u.organisation_id
+                {where}
+                ORDER BY
+                    CASE u.role WHEN 'admin' THEN 0 WHEN 'owner' THEN 1 ELSE 2 END,
+                    u.created_at
+            """), params).mappings().all()
             return [dict(r) for r in rows]
     except Exception:
         return []
 
 
-# ── Agent permissions helpers ──────────────────────────────────────────────────
+# ── Agent permissions ──────────────────────────────────────────────────────────
 
 def get_agent_permissions(user_id: int, agent_id: str) -> dict:
     try:
         with engine.connect() as conn:
             row = conn.execute(
-                text("SELECT can_access, tool_permissions FROM agent_permissions WHERE user_id = :uid AND agent_id = :aid"),
+                text("SELECT can_access, tool_permissions FROM agent_permissions "
+                     "WHERE user_id = :uid AND agent_id = :aid"),
                 {"uid": user_id, "aid": agent_id},
             ).mappings().first()
             return dict(row) if row else {"can_access": True, "tool_permissions": {}}
@@ -258,19 +324,21 @@ def get_agent_permissions(user_id: int, agent_id: str) -> dict:
 
 
 def get_all_agent_permissions(user_id: int) -> dict[str, dict]:
-    """Returns {agent_id: {can_access, tool_permissions}} for a user."""
     try:
         with engine.connect() as conn:
             rows = conn.execute(
-                text("SELECT agent_id, can_access, tool_permissions FROM agent_permissions WHERE user_id = :uid"),
+                text("SELECT agent_id, can_access, tool_permissions "
+                     "FROM agent_permissions WHERE user_id = :uid"),
                 {"uid": user_id},
             ).mappings().all()
-            return {r["agent_id"]: {"can_access": r["can_access"], "tool_permissions": r["tool_permissions"]} for r in rows}
+            return {r["agent_id"]: {"can_access": r["can_access"],
+                                    "tool_permissions": r["tool_permissions"]} for r in rows}
     except Exception:
         return {}
 
 
-def upsert_agent_permissions(user_id: int, agent_id: str, can_access: bool, tool_permissions: dict):
+def upsert_agent_permissions(user_id: int, agent_id: str, can_access: bool,
+                             tool_permissions: dict):
     try:
         with engine.connect() as conn:
             conn.execute(text("""
@@ -279,7 +347,8 @@ def upsert_agent_permissions(user_id: int, agent_id: str, can_access: bool, tool
                 ON CONFLICT (user_id, agent_id) DO UPDATE SET
                     can_access = EXCLUDED.can_access,
                     tool_permissions = EXCLUDED.tool_permissions
-            """), {"uid": user_id, "aid": agent_id, "ca": can_access, "tp": json.dumps(tool_permissions)})
+            """), {"uid": user_id, "aid": agent_id, "ca": can_access,
+                   "tp": json.dumps(tool_permissions)})
             conn.commit()
     except Exception:
         pass

@@ -7,7 +7,7 @@ import { useAuth } from '../../components/AuthProvider'
 import { apiRequest } from '../../lib/auth'
 
 export default function AccountPage() {
-  const { user, isLoading, refresh, logout } = useAuth()
+  const { user, isLoading, refresh, logout, canManage } = useAuth()
   const router = useRouter()
   const [name, setName] = useState('')
   const [provider, setProvider] = useState<'mistral' | 'claude'>('mistral')
@@ -133,7 +133,9 @@ export default function AccountPage() {
           <dl className="space-y-2">
             <div className="flex justify-between text-xs">
               <dt className="text-gray-500">Rôle</dt>
-              <dd className="text-gray-300">{user.role}</dd>
+              <dd className="text-gray-300">
+                {user.role === 'admin' ? 'Administrateur' : user.role === 'owner' ? 'Owner' : 'Membre'}
+              </dd>
             </div>
             <div className="flex justify-between text-xs">
               <dt className="text-gray-500">Organisation</dt>

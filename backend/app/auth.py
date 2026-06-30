@@ -12,6 +12,9 @@ from app.database import get_user_by_id
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 30
 
+# Hiérarchie : admin > owner > member
+ROLES = ("admin", "owner", "member")
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -63,6 +66,14 @@ async def get_optional_user(
 
 
 def require_admin(user: dict = Depends(get_current_user)) -> dict:
-    if user["role"] not in ("org_admin", "super_admin"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Droits insuffisants")
+    """Réservé au rôle admin (gestionnaire de l'application)."""
+    if user["role"] != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès réservé aux administrateurs")
+    return user
+
+
+def require_owner_or_admin(user: dict = Depends(get_current_user)) -> dict:
+    """Réservé aux rôles admin et owner."""
+    if user["role"] not in ("admin", "owner"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès réservé aux owners et administrateurs")
     return user

@@ -19,7 +19,7 @@ export interface User {
   id: number
   email: string
   name: string
-  role: 'user' | 'org_admin' | 'super_admin'
+  role: 'admin' | 'owner' | 'member'
   organisation_id: number
   preferred_provider: 'mistral' | 'claude'
   features: Record<string, unknown>

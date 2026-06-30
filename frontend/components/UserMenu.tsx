@@ -5,8 +5,20 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from './AuthProvider'
 
+const ROLE_CHIP: Record<string, string> = {
+  admin: 'bg-red-950 border-red-800 text-red-400',
+  owner: 'bg-violet-950 border-violet-800 text-violet-400',
+  member: 'bg-gray-800 border-gray-700 text-gray-400',
+}
+
+const ROLE_LABEL: Record<string, string> = {
+  admin: 'Admin',
+  owner: 'Owner',
+  member: 'Membre',
+}
+
 export default function UserMenu() {
-  const { user, isAdmin, logout, isLoading } = useAuth()
+  const { user, canManage, isAdmin, logout, isLoading } = useAuth()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const router = useRouter()
@@ -41,6 +53,8 @@ export default function UserMenu() {
   }
 
   const initials = user.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+  const chipClass = ROLE_CHIP[user.role] ?? ROLE_CHIP.member
+  const roleLabel = ROLE_LABEL[user.role] ?? user.role
 
   return (
     <div ref={ref} className="relative">
@@ -58,16 +72,17 @@ export default function UserMenu() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1.5 w-48 bg-gray-900 border border-gray-800 rounded-xl shadow-xl z-50 overflow-hidden">
+        <div className="absolute right-0 top-full mt-1.5 w-52 bg-gray-900 border border-gray-800 rounded-xl shadow-xl z-50 overflow-hidden">
+          {/* En-tête utilisateur */}
           <div className="px-3 py-2.5 border-b border-gray-800">
             <p className="text-xs font-medium text-white truncate">{user.name}</p>
-            <p className="text-[11px] text-gray-500 truncate">{user.email}</p>
-            {isAdmin && (
-              <span className="inline-block mt-1 text-[10px] bg-violet-950 border border-violet-800 text-violet-400 px-1.5 py-0.5 rounded-full">
-                {user.role === 'super_admin' ? 'super admin' : 'admin'}
-              </span>
-            )}
+            <p className="text-[11px] text-gray-500 truncate mb-1">{user.email}</p>
+            <span className={`inline-block text-[10px] border px-1.5 py-0.5 rounded-full font-medium ${chipClass}`}>
+              {roleLabel}
+            </span>
           </div>
+
+          {/* Navigation */}
           <div className="py-1">
             <Link
               href="/account"
@@ -79,19 +94,25 @@ export default function UserMenu() {
               </svg>
               Mon compte
             </Link>
-            {isAdmin && (
+
+            {canManage && (
               <Link
                 href="/admin"
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-2.5 px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M3 9h6"/><path d="M3 15h6"/>
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                 </svg>
-                Administration
+                {isAdmin ? 'Administration' : 'Mon équipe'}
               </Link>
             )}
           </div>
+
+          {/* Déconnexion */}
           <div className="border-t border-gray-800 py-1">
             <button
               onClick={() => { logout(); setOpen(false); router.push('/') }}
