@@ -12,5 +12,6 @@
   },
   "output": {
     "type": "text"
-  }
+  },
+  "mermaid_flow": "flowchart TD\n    A([Prompt utilisateur]) --> B[Agent LLM]\n    B --> C[search_french_companies\\nAnnuaire SIRENE]\n    B --> D[find_company_contacts\\nEmails · Téléphones]\n    B --> E[web_search\\nTavily]\n    B --> F[mcp_datagouv\\nData.gouv.fr]\n    B --> G[bodacc_search\\nAnnonces légales]\n    C & D & E & F & G --> H[Synthèse]\n    H --> I([Fiche de prospection])"
 }

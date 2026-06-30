@@ -12,5 +12,6 @@
   },
   "output": {
     "type": "text"
-  }
+  },
+  "mermaid_flow": "flowchart TD\n    A([Demande utilisateur]) --> B{Type de demande}\n    B -- Emails --> C[gmail_read\\nAPI Google Gmail]\n    B -- Transcription --> D[Texte fourni\\npar l'utilisateur]\n    C & D --> E[Agent LLM\\nSynthèse]\n    E --> F([Compte-rendu structuré])"
 }

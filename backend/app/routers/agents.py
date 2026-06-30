@@ -5,14 +5,15 @@ import logging
 import traceback
 from pathlib import Path
 from typing import Optional
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 from app.services import agent_runner, gmail_service
-from app.database import upsert_conversation_session
+from app.database import upsert_conversation_session, get_agent_permissions, get_all_agent_permissions
 from app.config import BACKEND_PUBLIC_URL, MISTRAL_MODEL, CLAUDE_MODEL
+from app.auth import get_optional_user, get_current_user
 
 router = APIRouter()
 AGENTS_DIR = Path("agents")
@@ -107,6 +108,7 @@ def load_agent_detail(agent_id: str) -> dict:
         "docs": docs,
         "knowledge": knowledge,
         "tools_info": _load_agent_tools_info(agent_id),
+        "mermaid_flow": config.get("mermaid_flow"),
     }
 
 
@@ -117,13 +119,29 @@ class RunRequest(BaseModel):
 
 
 @router.get("/agents")
-async def list_agents():
-    return load_agents()
+async def list_agents(current_user: dict | None = Depends(get_optional_user)):
+    agents = load_agents()
+    if current_user:
+        all_perms = get_all_agent_permissions(current_user["id"])
+        for agent in agents:
+            aid = agent["id"]
+            if aid in all_perms:
+                agent["user_can_access"] = all_perms[aid]["can_access"]
+                agent["user_tool_permissions"] = all_perms[aid]["tool_permissions"]
+            else:
+                agent["user_can_access"] = True
+                agent["user_tool_permissions"] = {}
+    return agents
 
 
 @router.get("/agents/{agent_id}")
-async def get_agent(agent_id: str):
-    return load_agent_detail(agent_id)
+async def get_agent(agent_id: str, current_user: dict | None = Depends(get_optional_user)):
+    detail = load_agent_detail(agent_id)
+    if current_user:
+        perms = get_agent_permissions(current_user["id"], agent_id)
+        detail["user_can_access"] = perms["can_access"]
+        detail["user_tool_permissions"] = perms["tool_permissions"]
+    return detail
 
 
 async def _resolve_input(agent_id: str, body: RunRequest) -> str:
@@ -135,7 +153,11 @@ async def _resolve_input(agent_id: str, body: RunRequest) -> str:
 
 
 @router.post("/agents/{agent_id}/run")
-async def run_agent(agent_id: str, body: RunRequest):
+async def run_agent(agent_id: str, body: RunRequest, current_user: dict | None = Depends(get_optional_user)):
+    if current_user:
+        perms = get_agent_permissions(current_user["id"], agent_id)
+        if not perms["can_access"]:
+            raise HTTPException(403, "Accès refusé à cet agent")
     user_content = await _resolve_input(agent_id, body)
     try:
         result = await agent_runner.run_agent(
@@ -151,17 +173,23 @@ async def run_agent(agent_id: str, body: RunRequest):
         title = (body.input or "")[:80] or f"Session {agent_id}"
         upsert_conversation_session(
             body.session_id, agent_id, title,
-            result["input_tokens"], result["output_tokens"]
+            result["input_tokens"], result["output_tokens"],
+            user_id=current_user["id"] if current_user else None,
         )
 
     return result
 
 
 @router.post("/agents/{agent_id}/stream")
-async def stream_agent(agent_id: str, body: RunRequest):
+async def stream_agent(agent_id: str, body: RunRequest, current_user: dict | None = Depends(get_optional_user)):
+    if current_user:
+        perms = get_agent_permissions(current_user["id"], agent_id)
+        if not perms["can_access"]:
+            raise HTTPException(403, "Accès refusé à cet agent")
     user_content = await _resolve_input(agent_id, body)
 
     title = (body.input or "")[:80] or f"Session {agent_id}"
+    uid = current_user["id"] if current_user else None
 
     async def generate():
         try:
@@ -172,6 +200,7 @@ async def stream_agent(agent_id: str, body: RunRequest):
                         body.session_id, agent_id, title,
                         event.get("input_tokens", 0),
                         event.get("output_tokens", 0),
+                        user_id=uid,
                     )
         except Exception as e:
             logger.error("Stream error: %s\n%s", e, traceback.format_exc())

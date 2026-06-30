@@ -11,5 +11,6 @@
   },
   "output": {
     "type": "mermaid"
-  }
+  },
+  "mermaid_flow": "flowchart TD\n    A([Description textuelle]) --> B[Agent LLM]\n    B --> C{Type de diagramme}\n    C -- UML --> D[Cas d'utilisation]\n    C -- Séquence --> E[Diagramme de séquence]\n    C -- Données --> F[Ontologie · Mind map]\n    C -- Flux --> G[Flowchart]\n    D & E & F & G --> H([Diagramme Mermaid])"
 }

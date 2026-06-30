@@ -12,5 +12,6 @@
   },
   "output": {
     "type": "text"
-  }
+  },
+  "mermaid_flow": "flowchart TD\n    A([Adresse ou parcelle]) --> B[Agent LLM]\n    B --> C[geocode_address\\nCoordonnées GPS]\n    C --> D[cadastre_parcelle\\nDonnées foncières]\n    C --> E[georisques_commune\\nRisques naturels · CatNat]\n    C --> F[plu_info\\nPLU · Zonage]\n    B --> G[web_search\\nRéglementation]\n    B --> H[mcp_datagouv\\nDonnées publiques]\n    D & E & F & G & H --> I([Rapport urbanistique])"
 }

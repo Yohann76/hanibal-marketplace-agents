@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 DATABASE_URL     = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@postgres:5432/marketplace")
+SECRET_KEY       = os.getenv("SECRET_KEY", "changeme-use-a-strong-random-key-in-production")
 MISTRAL_API_KEY  = os.getenv("MISTRAL_API_KEY", "")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 TAVILY_API_KEY   = os.getenv("TAVILY_API_KEY", "")

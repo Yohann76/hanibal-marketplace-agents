@@ -12,5 +12,6 @@
   },
   "output": {
     "type": "text"
-  }
+  },
+  "mermaid_flow": "flowchart TD\n    A([URL ou question SEO]) --> B[Agent LLM]\n    B --> C[extract_html\\nContenu · Balises · Structure]\n    B --> D[web_search\\nConcurrents · Mots-clés]\n    C & D --> E[Analyse SEO]\n    E --> F([Rapport SEO\\nRecommandations])"
 }

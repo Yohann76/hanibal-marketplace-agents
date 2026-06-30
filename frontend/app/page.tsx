@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { AgentConfig } from '../components/AgentCard'
 import AgentGrid from '../components/AgentGrid'
+import UserMenu from '../components/UserMenu'
 
 async function getAgents(): Promise<AgentConfig[]> {
   try {
@@ -46,6 +47,7 @@ export default async function Home() {
               </svg>
               Historique
             </Link>
+            <UserMenu />
           </nav>
         </div>
       </header>

@@ -6,6 +6,7 @@ import { readStream } from '../lib/stream'
 import Link from 'next/link'
 import { AgentConfig } from './AgentCard'
 import MarkdownResult from './MarkdownResult'
+import MermaidDiagram from './MermaidDiagram'
 
 export interface KnowledgeFile {
   name: string
@@ -28,6 +29,9 @@ export interface AgentDetail {
   docs: string
   knowledge: KnowledgeFile[]
   tools_info: ToolInfo[]
+  mermaid_flow?: string
+  user_can_access?: boolean
+  user_tool_permissions?: Record<string, boolean>
 }
 
 interface ToolCallRecord {
@@ -72,9 +76,10 @@ function timeAgo(dateStr: string) {
 
 export default function AgentFullPage({ detail }: { detail: AgentDetail }) {
   const [tab, setTab] = useState<Tab>('use')
-  const { config, system_prompt, docs, knowledge, tools_info = [] } = detail
+  const { config, system_prompt, docs, knowledge, tools_info = [], mermaid_flow, user_can_access } = detail
   const hasKnowledge = knowledge && knowledge.length > 0
   const hasTools = tools_info.length > 0
+  const isLocked = user_can_access === false
 
   return (
     <div className="h-screen bg-gray-950 text-white flex flex-col overflow-hidden">
@@ -158,11 +163,26 @@ export default function AgentFullPage({ detail }: { detail: AgentDetail }) {
       </nav>
 
       {tab === 'use' ? (
-        <UseTab config={config} toolsInfo={tools_info} />
+        isLocked ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center max-w-sm px-6">
+              <div className="w-14 h-14 rounded-2xl bg-gray-900 border border-gray-800 flex items-center justify-center mx-auto mb-4">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+              </div>
+              <h3 className="text-sm font-semibold text-white mb-2">Accès restreint</h3>
+              <p className="text-xs text-gray-500 leading-relaxed">Vous n'avez pas accès à cet agent. Contactez un administrateur pour demander l'accès.</p>
+            </div>
+          </div>
+        ) : (
+          <UseTab config={config} toolsInfo={tools_info} />
+        )
       ) : (
         <main className="flex-1 px-8 py-8 max-w-4xl w-full mx-auto overflow-y-auto">
           {tab === 'config' && <ConfigTab config={config} systemPrompt={system_prompt} />}
-          {tab === 'docs' && <DocsTab docs={docs} />}
+          {tab === 'docs' && <DocsTab docs={docs} mermaidFlow={mermaid_flow} />}
           {tab === 'tools' && <ToolsTab toolsInfo={tools_info} />}
           {tab === 'knowledge' && <KnowledgeTab knowledge={knowledge} />}
         </main>
@@ -945,9 +965,24 @@ function ConfigTab({ config, systemPrompt }: { config: AgentConfig; systemPrompt
   )
 }
 
-function DocsTab({ docs }: { docs: string }) {
-  if (!docs) return <p className="text-gray-500 text-sm">Aucune documentation disponible.</p>
-  return <MarkdownResult content={docs} />
+function DocsTab({ docs, mermaidFlow }: { docs: string; mermaidFlow?: string }) {
+  return (
+    <div className="space-y-8">
+      {mermaidFlow && (
+        <div>
+          <h2 className="text-gray-500 text-[10px] uppercase tracking-widest mb-3 font-semibold">Flux fonctionnel</h2>
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+            <MermaidDiagram code={mermaidFlow} />
+          </div>
+        </div>
+      )}
+      {docs ? (
+        <MarkdownResult content={docs} />
+      ) : (
+        <p className="text-gray-500 text-sm">Aucune documentation disponible.</p>
+      )}
+    </div>
+  )
 }
 
 function KnowledgeTab({ knowledge }: { knowledge: KnowledgeFile[] }) {

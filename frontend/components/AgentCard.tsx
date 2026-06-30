@@ -12,6 +12,8 @@ export interface AgentConfig {
     label: string
     placeholder: string
   }
+  user_can_access?: boolean
+  user_tool_permissions?: Record<string, boolean>
 }
 
 const THEMES = [
@@ -125,14 +127,25 @@ function AgentIcon({ inputType, className }: { inputType: string; className?: st
 
 export default function AgentCard({ agent }: { agent: AgentConfig }) {
   const theme = getTheme(agent.id)
+  const locked = agent.user_can_access === false
 
   return (
     <Link
       href={`/agents/${agent.id}`}
-      className={`relative group flex flex-col bg-gray-900/60 border border-gray-800 ${theme.hover} rounded-2xl p-5 transition-all duration-200 hover:bg-gray-900 hover:shadow-xl overflow-hidden`}
+      className={`relative group flex flex-col bg-gray-900/60 border border-gray-800 ${locked ? '' : theme.hover} rounded-2xl p-5 transition-all duration-200 ${locked ? 'opacity-60' : 'hover:bg-gray-900 hover:shadow-xl'} overflow-hidden`}
     >
       {/* Top glow line */}
-      <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent ${theme.topLine} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+      {!locked && <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent ${theme.topLine} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />}
+
+      {/* Lock badge */}
+      {locked && (
+        <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+      )}
 
       {/* Icon */}
       <div className={`w-10 h-10 rounded-xl ${theme.iconBg} border border-white/5 flex items-center justify-center mb-4 shrink-0`}>
@@ -141,7 +154,7 @@ export default function AgentCard({ agent }: { agent: AgentConfig }) {
 
       {/* Name */}
       <div className="flex items-start gap-2 mb-1.5">
-        <h3 className={`text-white font-semibold text-sm leading-snug ${theme.accent} transition-colors`}>
+        <h3 className={`text-white font-semibold text-sm leading-snug ${locked ? '' : theme.accent} transition-colors`}>
           {agent.name}
         </h3>
         {agent.badge === 'bug' && (

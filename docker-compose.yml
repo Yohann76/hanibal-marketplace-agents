@@ -64,6 +64,7 @@ services:
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
       - BACKEND_PUBLIC_URL=${BACKEND_PUBLIC_URL}
+      - SECRET_KEY=${SECRET_KEY:-changeme-use-a-strong-random-key-in-production}
       - PORT=8080
       # LangFuse observabilité — clés pré-configurées, aucun .env requis
       - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-pk-lf-oc-agents-local}
